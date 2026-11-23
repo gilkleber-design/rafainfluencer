@@ -77,3 +77,9 @@ Telas capturadas: 1 Conteúdos, 2 detalhe EP002, 3 Chat, 4 Biblioteca, 5 Aprova�
 
 - O painel passa a ser só escuro, como manda a especificação ("dark-first"). Não existe mais tema claro.
 - A Vercel gera um preview automático da branch quando ela é enviada ao GitHub, como já acontece com a `rafa-studio-mvp`. Não foi feito deploy de produção.
+
+## Preview na Vercel (23/11)
+
+- O primeiro preview abriu com "This page couldn't load" porque `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` estavam só em Production. O Gil habilitou as duas também em Preview e adicionou `https://*-gilkleber-2047s-projects.vercel.app/**` nas Redirect URLs do Supabase.
+- As variáveis `NEXT_PUBLIC_*` entram no build: depois de mudar uma delas, é preciso um deploy novo.
+- O commit d84b875 mostra uma tela "Configuração incompleta" quando falta alguma variável, em vez do erro genérico.
