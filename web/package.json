@@ -9,12 +9,20 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.2.9",
+    "@fontsource-variable/inter": "^5.2.8",
     "@supabase/supabase-js": "2.119.2",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/typography": "^0.5.19",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.553.0",
     "next": "16.4.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-markdown": "10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
     "@types/node": "22.10.0",
