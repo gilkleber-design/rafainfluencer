@@ -114,8 +114,8 @@ function Login() {
 }
 
 const ABAS: { id: Aba; nome: string; curto?: string; icone: React.ElementType }[] = [
-  { id: "chat", nome: "Chat", icone: MessagesSquare },
   { id: "conteudos", nome: "Conteúdos", icone: Layers },
+  { id: "chat", nome: "Chat", icone: MessagesSquare },
   { id: "biblioteca", nome: "Biblioteca", icone: Library },
   { id: "aprovacoes", nome: "Aprovações", icone: CheckCheck },
   { id: "metricas", nome: "Métricas", icone: BarChart3 },
@@ -123,7 +123,7 @@ const ABAS: { id: Aba; nome: string; curto?: string; icone: React.ElementType }[
 ];
 
 function Studio({ email }: { email: string }) {
-  const [aba, setAba] = useState<Aba>("chat");
+  const [aba, setAba] = useState<Aba>("conteudos");
   const [conversaId, setConversaId] = useState<string | null>(null);
   const [abrir, setAbrir] = useState<{ resultado?: string; serie?: string; n: number }>({ n: 0 });
   const { linhas: aprovacoes } = useTabela<Aprovacao>("aprovacoes", { ordem: "criado_em" });
