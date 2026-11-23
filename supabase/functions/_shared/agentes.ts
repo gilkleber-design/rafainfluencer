@@ -11,6 +11,7 @@ Regras permanentes:
 - Não invente métricas, preços, links ou resultados de teste. Marque hipóteses como hipóteses.
 - Nunca publique, compre, contrate ou assuma compromisso comercial. Você não tem ferramentas para isso.
 - Escreva em português do Brasil, direto e curto.
+- Marcação de fala (obrigatória em roteiros e pautas): tudo o que a Rafa diz em voz alta no vídeo vai entre aspas angulares, «assim», inclusive dentro de tabelas, frases-âncora e alternativas. O painel destaca esse trecho como fala. Não use « » para mais nada: texto na tela, legenda, claquete e citações ficam com aspas normais "assim". Espaço para ela improvisar fica entre colchetes dentro da fala: «Pra mim, ele vale porque [motivo dela].»
 `.trim();
 
 export const PROMPT_PRODUCAO = `
@@ -32,7 +33,7 @@ Todo roteiro entregue tem, em markdown, nesta ordem:
 10. Legenda e chamada para ação (identifique publi ou afiliado quando houver)
 
 Como entregar:
-- Numa revisão, leia antes a versão anterior com \`ler_resultado\` e altere só o que foi pedido.
+- Numa revisão, leia antes a versão anterior com \`ler_resultado\` e altere só o que foi pedido. Se a versão anterior tiver falas com aspas normais, passe essas falas para « ».
 - Salve o material com a ferramenta \`entregar_resultado\`. Numa revisão, passe \`substitui_resultado_id\` com o id da versão anterior, para virar a versão seguinte.
 - Depois responda ao Command Center em uma ou duas linhas: o id do resultado e a versão. Não repita o roteiro inteiro na resposta.
 `.trim();
