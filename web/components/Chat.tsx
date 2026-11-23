@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Markdown from "react-markdown";
+import Md from "@/components/Md";
 import { ponte, supabase } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
 import type { Conversa, Mensagem } from "@/lib/tipos";
@@ -76,7 +76,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
           {mensagens.map((m) => (
             <div key={m.id} className={`msg ${m.autor}`}>
               <div className="autor">{m.autor_nome ?? m.autor} · {new Date(m.criado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
-              <div className="corpo"><Markdown>{m.texto}</Markdown></div>
+              <Md className="corpo md">{m.texto}</Md>
               {m.anexos?.length > 0 && <div className="anexos">{m.anexos.map((a) => <span key={a.caminho}>📎 {a.nome}</span>)}</div>}
             </div>
           ))}

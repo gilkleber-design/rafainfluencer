@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import Markdown from "react-markdown";
+import Md from "@/components/Md";
 import { ponte } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
 import type { Aprovacao, Resultado, Tarefa } from "@/lib/tipos";
@@ -70,7 +70,7 @@ export function Resultados({ abrirId }: { abrirId?: string | null }) {
             ))}
             <span className="meta">por {sel.autor} · {data(sel.criado_em)}</span>
           </div>
-          <Markdown>{sel.conteudo}</Markdown>
+          <Md>{sel.conteudo}</Md>
         </article>
       )}
     </div>
@@ -110,7 +110,7 @@ export function Aprovacoes({ verResultado }: { verResultado: (id: string) => voi
             {r && (
               <>
                 <button className="link" onClick={() => verResultado(r.id)}>Abrir “{r.titulo}” (v{r.versao})</button>
-                <details><summary>Ver aqui</summary><div className="documento"><Markdown>{r.conteudo}</Markdown></div></details>
+                <details><summary>Ver aqui</summary><Md className="md documento">{r.conteudo}</Md></details>
               </>
             )}
             <textarea
