@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { BarChart3, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, variaveisFaltando } from "@/lib/supabase";
 import Chat from "@/components/Chat";
 import { Aprovacoes, Tarefas } from "@/components/Paineis";
 import { Biblioteca, Conteudos } from "@/components/Conteudos";
@@ -15,6 +15,27 @@ import { cn } from "@/lib/cn";
 type Aba = "chat" | "conteudos" | "biblioteca" | "tarefas" | "aprovacoes" | "metricas";
 
 export default function Pagina() {
+  const faltam = variaveisFaltando();
+  if (faltam.length > 0) return <SemConfiguracao faltam={faltam} />;
+  return <Painel />;
+}
+
+/** Erro claro quando o deploy foi feito sem as variáveis do Supabase (ex.: preview da Vercel). */
+function SemConfiguracao({ faltam }: { faltam: string[] }) {
+  return (
+    <main className="grid min-h-dvh place-items-center bg-bg p-6">
+      <div role="alert" className="w-full max-w-md space-y-4">
+        <Marca variante="empilhada" className="-ml-3 w-[150px]" />
+        <h1 className="font-display text-[32px] leading-tight">Configuração incompleta</h1>
+        <p className="text-[15px] text-ink-2">Este endereço foi publicado sem as variáveis de ambiente do Supabase, então o painel não consegue se conectar.</p>
+        <ul className="space-y-1 rounded-xl border border-line bg-surface p-3.5 font-mono text-[13px] text-ink">{faltam.map((v) => <li key={v}>{v}</li>)}</ul>
+        <p className="text-[13px] text-muted">Na Vercel: Settings › Environment Variables, marque também o ambiente Preview (ou Production) nessas variáveis e faça um novo deploy.</p>
+      </div>
+    </main>
+  );
+}
+
+function Painel() {
   const [sessao, setSessao] = useState<Session | null | undefined>(undefined);
 
   useEffect(() => {

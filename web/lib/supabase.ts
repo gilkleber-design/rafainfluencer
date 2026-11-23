@@ -3,6 +3,14 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let cliente: SupabaseClient | null = null;
 
+/** Variáveis públicas que faltam neste deploy (lidas no build; vazias = painel não conecta). */
+export function variaveisFaltando(): string[] {
+  const faltam: string[] = [];
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) faltam.push("NEXT_PUBLIC_SUPABASE_URL");
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) faltam.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  return faltam;
+}
+
 export function supabase(): SupabaseClient {
   if (!cliente) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
