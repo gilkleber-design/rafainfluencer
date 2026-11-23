@@ -2,8 +2,19 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://rafastudio.profgilkleber.com.br"),
   title: "Rafa Studio",
-  description: "Da ideia ao próximo take. Painel privado da operação Rafa Influencer.",
+  description: "Da ideia ao próximo take.",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Rafa Studio",
+    title: "Rafa Studio",
+    description: "Da ideia ao próximo take.",
+    url: "/",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Logo rafa. Studio com a frase Da ideia ao próximo take." }],
+  },
+  twitter: { card: "summary_large_image", title: "Rafa Studio", description: "Da ideia ao próximo take.", images: ["/og.jpg"] },
   robots: { index: false, follow: false },
   icons: {
     icon: [
