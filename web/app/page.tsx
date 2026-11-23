@@ -62,19 +62,29 @@ function Carregando() {
 
 function Login() {
   const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [enviado, setEnviado] = useState(false);
-  const [ocupado, setOcupado] = useState(false);
+  const [ocupado, setOcupado] = useState<"senha" | "link" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
-    setOcupado(true);
+    setOcupado("senha");
+    const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password: senha });
+    setOcupado(null);
+    if (error) setErro(/invalid login credentials/i.test(error.message) ? "E-mail ou senha incorretos." : error.message);
+  }
+
+  async function receberLink() {
+    setErro(null);
+    if (!email.trim()) { setErro("Digite seu e-mail para receber o link."); return; }
+    setOcupado("link");
     const { error } = await supabase().auth.signInWithOtp({
-      email,
+      email: email.trim(),
       options: { emailRedirectTo: window.location.origin, shouldCreateUser: true },
     });
-    setOcupado(false);
+    setOcupado(null);
     if (error) setErro(error.message);
     else setEnviado(true);
   }
@@ -104,16 +114,24 @@ function Login() {
             <form onSubmit={entrar} className="space-y-5">
               <div>
                 <h2 className="font-display text-[40px] leading-tight">Entrar</h2>
-                <p className="mt-1 text-ink-2 text-[15px]">Você recebe um link de acesso por e-mail. Sem senha.</p>
+                <p className="mt-1 text-ink-2 text-[15px]">Use seu e-mail e senha.</p>
               </div>
               <label className="block space-y-1.5">
                 <span className="text-sm font-medium">E-mail</span>
                 <input
-                  type="email" required autoFocus placeholder="voce@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)}
+                  type="email" required autoFocus autoComplete="email" placeholder="voce@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)}
                   className="h-12 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] text-ink focus:outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[var(--rs-champagne)] focus:border-brand/70"
                 />
               </label>
-              <Botao variante="primario" tamanho="lg" className="w-full" disabled={ocupado}>{ocupado ? "Enviando…" : "Receber link de acesso"}</Botao>
+              <label className="block space-y-1.5">
+                <span className="text-sm font-medium">Senha</span>
+                <input
+                  type="password" required autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)}
+                  className="h-12 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] text-ink focus:outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[var(--rs-champagne)] focus:border-brand/70"
+                />
+              </label>
+              <Botao variante="primario" tamanho="lg" className="w-full" disabled={ocupado !== null}>{ocupado === "senha" ? "Entrando…" : "Entrar"}</Botao>
+              <Botao type="button" variante="fantasma" tamanho="sm" className="w-full" disabled={ocupado !== null} onClick={receberLink}>{ocupado === "link" ? "Enviando…" : "Receber link de acesso por e-mail"}</Botao>
               {erro && <Aviso>{erro}</Aviso>}
             </form>
           )}
