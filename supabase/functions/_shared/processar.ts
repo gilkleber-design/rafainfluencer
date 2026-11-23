@@ -150,10 +150,14 @@ async function aplicarEvento(db: Db, motor: Motor, conv: Conversa, ev: EventoMot
     }
     case "agent.custom_tool_use": {
       const autor = ev.threadId ? (NOMES_THREAD.get(ev.threadId) ?? "Produção") : "Command Center";
-      const { data: ja } = await db.from("chamadas").select("estado").eq("evento_id", ev.id).maybeSingle();
-      if (ja?.estado === "respondida") break;
-      if (!ja) {
-        await db.from("chamadas").insert({ evento_id: ev.id, conversa_id: conv.id, nome: String(b.name), entrada: b.input ?? {} });
+      // A linha em `chamadas` é a trava: só quem inseriu executa (ponte e sync podem rodar juntos).
+      const { error: dup } = await db.from("chamadas")
+        .insert({ evento_id: ev.id, conversa_id: conv.id, nome: String(b.name), entrada: b.input ?? {} });
+      if (dup) {
+        const { data: ja } = await db.from("chamadas").select("estado, criado_em").eq("evento_id", ev.id).maybeSingle();
+        const presa = ja?.estado === "pendente" && Date.now() - new Date(ja.criado_em).getTime() > 90_000;
+        if (!presa) break;
+        await db.from("chamadas").update({ criado_em: new Date().toISOString() }).eq("evento_id", ev.id);
       }
       let resposta: string;
       let erro = false;
