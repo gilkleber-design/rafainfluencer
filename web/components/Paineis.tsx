@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Check, CheckCheck, ChevronLeft, Copy, ExternalLink, FileText, KanbanSquare, PencilLine } from "lucide-react";
+import { Bot, Check, CheckCheck, ChevronLeft, Copy, ExternalLink, FileText, PencilLine } from "lucide-react";
 import Md from "@/components/Md";
 import { ponte } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
@@ -21,59 +21,53 @@ function Cabecalho({ titulo, sub, children }: { titulo: string; sub?: string; ch
   );
 }
 
-/* ------------------------------------------------------------------ Tarefas */
-
-const COLUNAS = ["pendente", "em_execucao", "aguardando_aprovacao", "concluida", "falhou"] as const;
-const COR_COLUNA: Record<string, string> = {
-  pendente: "bg-muted", em_execucao: "bg-info", aguardando_aprovacao: "bg-warn", concluida: "bg-ok", falhou: "bg-bad",
-};
+/* ------------------------------------------------------- Atividade dos agentes */
 
 export function Tarefas() {
   const { linhas, carregando } = useTabela<Tarefa>("tarefas", { ordem: "atualizada_em" });
-  const ativas = linhas.filter((t) => t.estado === "em_execucao" || t.estado === "pendente").length;
+  const { linhas: resultados } = useTabela<Resultado>("resultados", { ordem: "criado_em", limite: 500 });
+  const { linhas: conteudos } = useTabela<Conteudo>("conteudos", { ordem: "ordem", limite: 500 });
+  const reelDe = useMemo(() => {
+    const porSerie = new Map(conteudos.map((c) => [c.serie, c]));
+    const mapa = new Map<string, Conteudo>();
+    for (const r of resultados) {
+      const c = r.tarefa_id ? porSerie.get(r.serie) : undefined;
+      if (c && r.tarefa_id && !mapa.has(r.tarefa_id)) mapa.set(r.tarefa_id, c);
+    }
+    return mapa;
+  }, [resultados, conteudos]);
+  const visiveis = linhas.filter((t) => !t.arquivada_em).sort((a, b) => b.atualizada_em.localeCompare(a.atualizada_em));
+  const atencao = visiveis.filter((t) => t.estado === "aguardando_aprovacao" || t.estado === "falhou").length;
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <Cabecalho titulo="Tarefas" sub={carregando ? "Carregando…" : `${linhas.length} no total · ${ativas} em andamento`} />
-      {!carregando && linhas.length === 0 ? (
-        <Vazio icone={<KanbanSquare className="size-5" />} titulo="Nenhuma tarefa ainda">Quando você pedir algo no Chat, o Command Center registra a tarefa e ela aparece aqui.</Vazio>
-      ) : (
-        <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden px-4 pb-6 md:px-8 snap-x snap-mandatory">
-          <div className="flex h-full gap-4">
-            {COLUNAS.map((c) => {
-              const itens = linhas.filter((t) => t.estado === c);
-              const info = ESTADO_TAREFA[c];
+      <Cabecalho titulo="Atividade dos agentes" sub={carregando ? "Carregando…" : atencao ? `${atencao} precisa${atencao > 1 ? "m" : ""} de você` : "O que cada agente fez, do mais recente para o mais antigo"} />
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 md:px-8">
+        {carregando ? <Esqueleto className="h-24" /> : visiveis.length === 0 ? (
+          <Vazio icone={<Bot className="size-5" />} titulo="Nenhuma atividade por enquanto">Quando você pedir algo no Chat, cada passo dos agentes aparece aqui.</Vazio>
+        ) : (
+          <Cartao className="mx-auto max-w-[860px] divide-y divide-line overflow-hidden">
+            {visiveis.map((t) => {
+              const reel = reelDe.get(t.id);
+              const destaque = t.estado === "aguardando_aprovacao" ? "alerta" : t.estado === "falhou" ? "erro" : null;
               return (
-                <div key={c} className="flex h-full min-w-[260px] flex-1 shrink-0 snap-start flex-col rounded-2xl bg-surface-2/60 p-2.5">
-                  <div className="flex items-center gap-2 px-1.5 pb-2.5 pt-1">
-                    <span className={cn("size-2 rounded-full", COR_COLUNA[c])} />
-                    <span className="text-[13px] font-semibold">{info.nome}</span>
-                    <span className="ml-auto text-[12px] text-muted tabular-nums">{itens.length}</span>
-                  </div>
-                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                    {carregando && <Esqueleto className="h-24" />}
-                    {!carregando && itens.length === 0 && <p className="px-2 py-6 text-center text-[12px] text-muted">Vazio</p>}
-                    {itens.map((t) => (
-                      <Cartao key={t.id} className="p-3.5 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-[11px] text-muted">{t.codigo}</span>
-                          <span className="text-[11px] text-muted">{quando(t.atualizada_em)}</span>
-                        </div>
-                        <p className="text-[14px] font-medium leading-snug">{t.titulo}</p>
-                        {t.detalhe && <p className="line-clamp-3 text-[13px] text-muted">{t.detalhe}</p>}
-                        <div className="flex items-center gap-2 pt-0.5">
-                          <Avatar nome={t.agente} tipo="agente" tamanho={22} />
-                          <span className="text-[12px] text-muted">{t.agente}</span>
-                          <Selo tom={info.tom} className="ml-auto">{info.nome}</Selo>
-                        </div>
-                      </Cartao>
-                    ))}
+                <div key={t.id} className={cn("flex gap-3 px-4 py-3.5", destaque === "alerta" && "bg-warn-soft/60", destaque === "erro" && "bg-bad-soft/60")}>
+                  <Avatar nome={t.agente} tipo="agente" tamanho={28} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-[13px] font-semibold">{t.agente}</span>
+                      {reel && <span className="text-[12px] text-brand">{nomeConteudo(reel)}</span>}
+                      {destaque && <Selo tom={destaque} ponto className="ml-auto">{destaque === "alerta" ? "Aguardando você" : "Falhou"}</Selo>}
+                    </div>
+                    <p className="mt-0.5 text-[14px] leading-snug">{t.titulo}</p>
+                    {t.detalhe && <p className="mt-0.5 line-clamp-2 text-[13px] text-muted">{t.detalhe}</p>}
+                    <p className="mt-1 text-[11px] text-muted">{quando(t.atualizada_em)}{!destaque && ` · ${ESTADO_TAREFA[t.estado]?.nome ?? t.estado}`}</p>
                   </div>
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
+          </Cartao>
+        )}
+      </div>
     </div>
   );
 }

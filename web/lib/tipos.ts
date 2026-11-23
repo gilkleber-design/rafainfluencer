@@ -1,6 +1,6 @@
 export interface Conversa { id: string; titulo: string; estado: string; custo_centavos: number; ultimo_erro: string | null; atualizado_em: string }
 export interface Mensagem { id: string; conversa_id: string; autor: "humano" | "command_center" | "agente" | "sistema"; autor_nome: string | null; texto: string; anexos: { nome: string; caminho: string }[]; criado_em: string }
-export interface Tarefa { id: string; conversa_id: string; codigo: string; titulo: string; agente: string; estado: string; detalhe: string | null; atualizada_em: string }
+export interface Tarefa { id: string; conversa_id: string; codigo: string; titulo: string; agente: string; estado: string; detalhe: string | null; arquivada_em?: string | null; atualizada_em: string }
 export interface Resultado { id: string; conversa_id: string | null; tarefa_id: string | null; serie: string; versao: number; tipo: string; titulo: string; conteudo: string; autor: string; criado_em: string }
 export interface Aprovacao { id: string; conversa_id: string; resultado_id: string | null; pergunta: string; estado: string; comentario: string | null; decidido_por: string | null; decidido_em: string | null; criado_em: string }
 export type Etapa = "ideia" | "roteiro" | "aprovado" | "em_producao" | "gravado" | "editado" | "publicado";
