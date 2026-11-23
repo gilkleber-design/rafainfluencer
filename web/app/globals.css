@@ -174,3 +174,37 @@
 .md .para-gil-corpo { padding: 0 1.1em 1em; font-size: .94em; }
 .md .para-gil-corpo > :first-child { margin-top: 0; }
 .md blockquote p::before, .md blockquote p::after { content: none; }
+
+/* Cores das etapas do quadro: uma cor bem distinta por etapa, em progressão. */
+.etapa-ideia { --etapa: #6b7280; }
+.etapa-roteiro { --etapa: #2563eb; }
+.etapa-aprovado { --etapa: #7c3aed; }
+.etapa-em_producao { --etapa: #ea580c; }
+.etapa-gravado { --etapa: #b98900; }
+.etapa-editado { --etapa: #db2777; }
+.etapa-publicado { --etapa: #16a34a; }
+@media (prefers-color-scheme: dark) {
+  .etapa-ideia { --etapa: #a1a8b3; }
+  .etapa-roteiro { --etapa: #60a5fa; }
+  .etapa-aprovado { --etapa: #a78bfa; }
+  .etapa-em_producao { --etapa: #fb923c; }
+  .etapa-gravado { --etapa: #facc15; }
+  .etapa-editado { --etapa: #f472b6; }
+  .etapa-publicado { --etapa: #4ade80; }
+}
+.etapa-ponto { background: var(--etapa); }
+.etapa-suave { background: color-mix(in srgb, var(--etapa) 14%, transparent); color: var(--etapa); border-color: color-mix(in srgb, var(--etapa) 55%, transparent); }
+.etapa-borda { border-top: 3px solid var(--etapa); }
+
+/* Selo de evidência do Radar */
+.evid { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 0 8px; font-size: 11px; font-weight: 600; line-height: 20px; white-space: nowrap; }
+.evid-forte { background: #dcfce7; color: #166534; }
+.evid-media { background: #fef3c7; color: #92400e; }
+.evid-fraca { background: #ffedd5; color: #9a3412; }
+.evid-sem { background: #fee2e2; color: #991b1b; }
+@media (prefers-color-scheme: dark) {
+  .evid-forte { background: #14532d; color: #bbf7d0; }
+  .evid-media { background: #78350f; color: #fde68a; }
+  .evid-fraca { background: #7c2d12; color: #fed7aa; }
+  .evid-sem { background: #7f1d1d; color: #fecaca; }
+}

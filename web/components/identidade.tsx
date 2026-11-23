@@ -45,7 +45,7 @@ export const ESTADO_CONVERSA: Record<string, { nome: string; tom: Tom }> = {
   encerrada: { nome: "Encerrada", tom: "neutro" },
 };
 
-export const TIPO_RESULTADO: Record<string, string> = { roteiro: "Roteiro", pauta: "Pauta", pesquisa: "Pesquisa", relatorio: "Relatório", outro: "Documento" };
+export const TIPO_RESULTADO: Record<string, string> = { roteiro: "Reel", pauta: "Pauta", pesquisa: "Pesquisa", relatorio: "Relatório", outro: "Documento" };
 
 export function quando(s: string) {
   const d = new Date(s);
@@ -62,14 +62,14 @@ export function quando(s: string) {
 }
 export const hora = (s: string) => new Date(s).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-export const ETAPAS: { id: import("@/lib/tipos").Etapa; nome: string; cor: string; tom: Tom }[] = [
-  { id: "ideia", nome: "Ideia", cor: "bg-muted", tom: "neutro" },
-  { id: "roteiro", nome: "Roteiro", cor: "bg-info", tom: "info" },
-  { id: "aprovado", nome: "Aprovado", cor: "bg-ok", tom: "ok" },
-  { id: "em_producao", nome: "Em produção", cor: "bg-warn", tom: "alerta" },
-  { id: "gravado", nome: "Gravado", cor: "bg-gold", tom: "ouro" },
-  { id: "editado", nome: "Editado", cor: "bg-brand", tom: "marca" },
-  { id: "publicado", nome: "Publicado", cor: "bg-[#2f6f4e]", tom: "ok" },
+export const ETAPAS: { id: import("@/lib/tipos").Etapa; nome: string; cor: string }[] = [
+  { id: "ideia", nome: "Ideia", cor: "etapa-ideia" },
+  { id: "roteiro", nome: "Roteiro", cor: "etapa-roteiro" },
+  { id: "aprovado", nome: "Aprovado", cor: "etapa-aprovado" },
+  { id: "em_producao", nome: "Em produção", cor: "etapa-em_producao" },
+  { id: "gravado", nome: "Gravado", cor: "etapa-gravado" },
+  { id: "editado", nome: "Editado", cor: "etapa-editado" },
+  { id: "publicado", nome: "Publicado", cor: "etapa-publicado" },
 ];
 export const nomeEtapa = (id: string) => ETAPAS.find((e) => e.id === id)?.nome ?? (id === "arquivado" ? "Lixeira" : id);
 export const num = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleString("pt-BR"));
@@ -85,4 +85,16 @@ export function nomeConteudo(c: { titulo: string; codigo?: string | null; classe
   }
   if (c.etiquetas?.includes("teste")) return `TESTE · ${c.titulo}`;
   return c.codigo ? `${c.codigo} · ${c.titulo}` : c.titulo;
+}
+
+export type Padrao = { id: string; nome: string; reel_origem: string; perfil: string; razao_vs_mediana: number; razao_comentarios: number | null; tipo_gancho: string | null; estrutura: string | null; mecanismo: string | null };
+
+/** Força da evidência do padrão do Radar: curtidas do Reel de origem ÷ mediana da criadora. */
+export function forcaEvidencia(p: Padrao | null | undefined): { classe: string; rotulo: string } {
+  if (!p) return { classe: "evid-sem", rotulo: "Sem evidência" };
+  const r = Number(p.razao_vs_mediana);
+  const x = r.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "x";
+  if (r >= 5) return { classe: "evid-forte", rotulo: `Evidência forte · ${x}` };
+  if (r >= 3) return { classe: "evid-media", rotulo: `Evidência média · ${x}` };
+  return { classe: "evid-fraca", rotulo: `Evidência fraca · ${x}` };
 }

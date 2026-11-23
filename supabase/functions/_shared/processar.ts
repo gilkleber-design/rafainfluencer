@@ -32,6 +32,9 @@ function textoDe(conteudo: unknown): string {
 
 const NOMES_THREAD = new Map<string, string>();
 
+/** Razão mínima (curtidas do Reel ÷ mediana da criadora) para um padrão valer como evidência. */
+export const PADRAO_MINIMO = 2;
+
 // ---------------------------------------------------------------- ferramentas
 async function executarFerramenta(db: Db, conversaId: string, nome: string, e: Record<string, unknown>, autor: string): Promise<string> {
   switch (nome) {
@@ -58,12 +61,14 @@ async function executarFerramenta(db: Db, conversaId: string, nome: string, e: R
       let serie: string | undefined;
       let versao = 1;
       let tarefaId: string | null = null;
+      let padraoId: string | null = e.padrao_id ? String(e.padrao_id) : null;
       if (e.substitui_resultado_id) {
-        const { data: ant } = await db.from("resultados").select("serie, tarefa_id")
+        const { data: ant } = await db.from("resultados").select("serie, tarefa_id, padrao_id")
           .eq("id", String(e.substitui_resultado_id)).maybeSingle();
         if (ant) {
           serie = ant.serie;
           tarefaId = ant.tarefa_id;
+          padraoId ??= ant.padrao_id;
           const { data: ult } = await db.from("resultados").select("versao").eq("serie", ant.serie)
             .order("versao", { ascending: false }).limit(1).single();
           versao = (ult?.versao ?? 0) + 1;
@@ -73,11 +78,20 @@ async function executarFerramenta(db: Db, conversaId: string, nome: string, e: R
         const { data: t } = await db.from("tarefas").select("id").eq("codigo", String(e.codigo_tarefa)).maybeSingle();
         if (t) tarefaId = t.id;
       }
+      const tipo = String(e.tipo ?? "outro");
+      if (tipo === "roteiro" || tipo === "pauta") {
+        // Regra do Gil: Reel só a partir de padrão do Radar com evidência (>= 2x a mediana).
+        if (!padraoId) return JSON.stringify({ erro: "Roteiro e pauta exigem padrao_id de um padrão do Radar com razão >= 2x a mediana. Use consultar_padroes. Se nenhum couber, não entregue: avise o Command Center." });
+        const { data: p } = await db.from("padroes").select("id, razao_vs_mediana, ativo").eq("id", padraoId).maybeSingle();
+        if (!p || !p.ativo) return JSON.stringify({ erro: `padrão ${padraoId} não existe ou está inativo. Use consultar_padroes.` });
+        if (Number(p.razao_vs_mediana) < PADRAO_MINIMO) return JSON.stringify({ erro: `padrão ${padraoId} tem ${p.razao_vs_mediana}x a mediana, abaixo do mínimo de ${PADRAO_MINIMO}x.` });
+      }
       const linha: Record<string, unknown> = {
         conversa_id: conversaId,
         tarefa_id: tarefaId,
         versao,
-        tipo: String(e.tipo ?? "outro"),
+        tipo,
+        padrao_id: padraoId,
         titulo: String(e.titulo ?? "Resultado"),
         conteudo: String(e.conteudo ?? ""),
         autor,
@@ -108,6 +122,24 @@ async function executarFerramenta(db: Db, conversaId: string, nome: string, e: R
       if (error) throw error;
       if (!data) return JSON.stringify({ erro: "resultado não encontrado" });
       return JSON.stringify(data);
+    }
+    case "consultar_padroes": {
+      let q = db.from("padroes").select("id, nome, reel_origem, perfil, razao_vs_mediana, razao_comentarios, categoria_produto, tipo_gancho, estrutura, texto_fixo_resumo, tem_fala, n_cortes, duracao_s, formato_rafa, mecanismo, nao_copiar, evidencia, coletado_em")
+        .eq("ativo", true).gte("razao_vs_mediana", PADRAO_MINIMO).order("razao_vs_mediana", { ascending: false });
+      if (e.formato_rafa) q = q.eq("formato_rafa", Number(e.formato_rafa));
+      const { data, error } = await q;
+      if (error) throw error;
+      const resposta: Record<string, unknown> = {
+        padroes: data,
+        formatos_rafa: { 1: "Vale o preço?", 2: "Prova da rotina", 3: "Nota da Rafa", 4: "Make de 5 minutos", 5: "Lado a lado" },
+        limites: "razao_vs_mediana compara curtidas do Reel com a mediana de curtidas da própria criadora; curtidas não são visualizações; cada padrão vem de um Reel só; a causa do desempenho é hipótese.",
+      };
+      if (e.incluir_reels) {
+        const { data: reels } = await db.from("reels_referencia").select("url, criadora, data, x_mediana_curtidas, x_mediana_comentarios, sinais, legenda, padrao_id")
+          .gte("x_mediana_curtidas", PADRAO_MINIMO).order("x_mediana_curtidas", { ascending: false }).limit(30);
+        resposta.reels_acima_de_2x = reels;
+      }
+      return JSON.stringify(resposta);
     }
     case "consultar_instagram": {
       const url = Deno.env.get("PESQUISA_URL");

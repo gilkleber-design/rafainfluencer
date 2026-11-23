@@ -92,7 +92,7 @@ export async function acaoConteudo(db: Db, membro: Membro, corpo: Record<string,
       if (texto === ult.conteudo && titulo === ult.titulo) return falha("nada mudou");
       const { data, error } = await db.from("resultados").insert({
         conversa_id: ult.conversa_id, tarefa_id: ult.tarefa_id, serie, versao: Number(ult.versao) + 1,
-        tipo: ult.tipo, titulo, conteudo: texto, autor: membro.nome,
+        tipo: ult.tipo, titulo, conteudo: texto, autor: membro.nome, padrao_id: ult.padrao_id ?? null,
       }).select("id, versao").single();
       if (error) return falha(error.message, 500);
       await db.from("conteudos").update({ titulo }).eq("serie", serie);

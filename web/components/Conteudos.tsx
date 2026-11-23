@@ -2,14 +2,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Archive, ArchiveRestore, BarChart3, Check, ChevronLeft, Copy, Eye, FileText, GripVertical, History, Instagram,
-  Library, Link2, MoreHorizontal, Paperclip, PencilLine, Plus, RefreshCw, Search, Tag, Trash2, X,
+  Library, Link2, MoreHorizontal, TrendingUp, Paperclip, PencilLine, Plus, RefreshCw, Search, Tag, Trash2, X,
 } from "lucide-react";
 import Md from "@/components/Md";
 import { ponte } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
 import type { Conteudo, Etapa, Historico, Metrica, Resultado } from "@/lib/tipos";
 import { Aviso, Botao, CampoTexto, Cartao, Esqueleto, Selo, Vazio } from "@/components/ui";
-import { Avatar, ETAPAS, TIPO_RESULTADO, nomeConteudo, nomeEtapa, num, quando } from "@/components/identidade";
+import { Avatar, ETAPAS, type Padrao, TIPO_RESULTADO, forcaEvidencia, nomeConteudo, nomeEtapa, num, quando } from "@/components/identidade";
 import { cn } from "@/lib/cn";
 
 /* ------------------------------------------------------------------ modal */
@@ -42,6 +42,8 @@ function useDados() {
   const c = useTabela<Conteudo>("conteudos", { ordem: "ordem", limite: 500 });
   const r = useTabela<Resultado>("resultados", { ordem: "criado_em", limite: 500 });
   const m = useTabela<Metrica>("metricas", { ordem: "coletado_em", limite: 1000 });
+  const p = useTabela<Padrao>("padroes", { ordem: "razao_vs_mediana", limite: 200 });
+  const padroes = useMemo(() => new Map(p.linhas.map((x) => [x.id, x])), [p.linhas]);
   const versoes = useMemo(() => {
     const mapa = new Map<string, Resultado[]>();
     for (const x of r.linhas) mapa.set(x.serie, [...(mapa.get(x.serie) ?? []), x]);
@@ -54,7 +56,7 @@ function useDados() {
     for (const v of mapa.values()) v.sort((a, b) => a.coletado_em.localeCompare(b.coletado_em));
     return mapa;
   }, [m.linhas]);
-  return { conteudos: c.linhas, carregando: c.carregando || r.carregando, versoes, metricas };
+  return { conteudos: c.linhas, carregando: c.carregando || r.carregando, versoes, metricas, padroes };
 }
 
 async function chamar(corpo: Record<string, unknown>, setErro: (e: string | null) => void) {
@@ -66,7 +68,7 @@ async function chamar(corpo: Record<string, unknown>, setErro: (e: string | null
 
 /* ================================================================ Conteúdos */
 export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: string | null; abrirSerie?: string | null }) {
-  const { conteudos, carregando, versoes, metricas } = useDados();
+  const { conteudos, carregando, versoes, metricas, padroes } = useDados();
   const [aberto, setAberto] = useState<string | null>(abrirSerie ?? null);
   const [lixeira, setLixeira] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -147,11 +149,11 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
                     const c = conteudos.find((x) => x.serie === ev.dataTransfer.getData("text/plain"));
                     if (c && c.etapa !== e.id) mover(c, e.id, { ordem: Date.now() / 1000 });
                   }}
-                  className={cn("flex h-full w-[264px] min-w-[240px] shrink-0 snap-start flex-col rounded-2xl p-2.5 transition",
+                  className={cn("flex h-full w-[264px] min-w-[240px] shrink-0 snap-start flex-col rounded-2xl p-2.5 transition etapa-borda", e.cor,
                     alvo === e.id && arrastando ? "bg-brand-soft ring-2 ring-brand/30" : "bg-surface-2/60")}
                 >
                   <div className="flex items-center gap-2 px-1.5 pb-2.5 pt-1">
-                    <span className={cn("size-2 rounded-full", e.cor)} />
+                    <span className={cn("size-2 rounded-full etapa-ponto", e.cor)} />
                     <span className="text-[13px] font-semibold">{e.nome}</span>
                     <span className="ml-auto text-[12px] text-muted tabular-nums">{itens.length}</span>
                   </div>
@@ -161,6 +163,7 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
                     {itens.map((c) => (
                       <CartaoConteudo
                         key={c.serie} c={c} versoes={versoes.get(c.serie) ?? []} metricas={metricas.get(c.serie) ?? []} anexos={anexosDe(c.serie)}
+                        padrao={c.padrao_id ? padroes.get(c.padrao_id) : null}
                         abrir={() => setAberto(c.serie)} mover={(et) => mover(c, et)}
                         arquivar={() => chamar({ acao: "conteudo_arquivar", serie: c.serie }, setErro)}
                         onDragStart={() => setArrastando(c.serie)} onDragEnd={() => { setArrastando(null); setAlvo(null); }}
@@ -184,8 +187,8 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
   );
 }
 
-function CartaoConteudo({ c, versoes, metricas, anexos, abrir, mover, arquivar, onDragStart, onDragEnd, fantasma }: {
-  c: Conteudo; versoes: Resultado[]; metricas: Metrica[]; anexos: number; abrir: () => void; mover: (e: Etapa) => void; arquivar: () => void;
+function CartaoConteudo({ c, versoes, metricas, anexos, padrao, abrir, mover, arquivar, onDragStart, onDragEnd, fantasma }: {
+  c: Conteudo; versoes: Resultado[]; metricas: Metrica[]; anexos: number; padrao: Padrao | null | undefined; abrir: () => void; mover: (e: Etapa) => void; arquivar: () => void;
   onDragStart: () => void; onDragEnd: () => void; fantasma: boolean;
 }) {
   const [menu, setMenu] = useState(false);
@@ -200,7 +203,7 @@ function CartaoConteudo({ c, versoes, metricas, anexos, abrir, mover, arquivar, 
     >
       <Cartao className="p-3 space-y-2 hover:border-brand/30 transition">
         <div className="flex items-center gap-1.5">
-          <Selo tom="neutro">{TIPO_RESULTADO[c.tipo] ?? c.tipo}</Selo>
+          <Selo tom="neutro">Reel</Selo>
           {versoes.length > 0 && <span className="text-[11px] text-muted">v{ult?.versao}</span>}
           {c.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
           {anexos > 0 && <span title={`${anexos} anexo(s)`} className="inline-flex items-center gap-0.5 text-[11px] text-muted"><Paperclip className="size-3" />{anexos}</span>}
@@ -209,6 +212,7 @@ function CartaoConteudo({ c, versoes, metricas, anexos, abrir, mover, arquivar, 
           </button>
         </div>
         <button onClick={abrir} className="block w-full text-left text-[14px] font-medium leading-snug cursor-pointer hover:text-brand">{nomeConteudo(c)}</button>
+        {!c.etiquetas?.includes("teste") && <SeloEvidencia padrao={padrao} />}
         <div className="flex items-center gap-2 text-[11px] text-muted">
           {ult && <><Avatar nome={ult.autor} tipo={/produ/i.test(ult.autor) ? "agente" : "humano"} tamanho={18} /><span className="truncate">{ult.autor}</span><span>·</span></>}
           <span className="whitespace-nowrap">{quando(c.atualizado_em)}</span>
@@ -229,7 +233,7 @@ function CartaoConteudo({ c, versoes, metricas, anexos, abrir, mover, arquivar, 
             {ETAPAS.map((e) => (
               <button key={e.id} disabled={e.id === c.etapa} onClick={() => { setMenu(false); mover(e.id); }}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] hover:bg-surface-2 disabled:opacity-40 cursor-pointer">
-                <span className={cn("size-2 rounded-full", e.cor)} />{e.nome}{e.id === c.etapa && <Check className="ml-auto size-3.5" />}
+                <span className={cn("size-2 rounded-full etapa-ponto", e.cor)} />{e.nome}{e.id === c.etapa && <Check className="ml-auto size-3.5" />}
               </button>
             ))}
             <div className="my-1 border-t border-line" />
@@ -250,7 +254,7 @@ function NovaIdeia({ aberto, fechar, setErro }: { aberto: boolean; fechar: () =>
     <Modal titulo="Nova ideia" aberto={aberto} fechar={fechar}>
       <form className="space-y-3" onSubmit={async (e) => {
         e.preventDefault(); setOcupado(true);
-        const r = await chamar({ acao: "conteudo_criar", titulo, conteudo: texto ? `# ${titulo}\n\n${texto}` : "", tipo: "pauta", etapa: "ideia" }, setErro);
+        const r = await chamar({ acao: "conteudo_criar", titulo, conteudo: texto ? `# ${titulo}\n\n${texto}` : "", tipo: "roteiro", etapa: "ideia" }, setErro);
         setOcupado(false);
         if (!r.erro) { setTitulo(""); setTexto(""); fechar(); }
       }}>
@@ -289,6 +293,9 @@ function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVolt
   const pai = c.anexo_de ? todos.find((x) => x.serie === c.anexo_de) : undefined;
   const pecas = todos.filter((x) => x.classe !== "documento" && !x.arquivado_em && x.serie !== c.serie && !x.anexo_de);
   const { linhas: historico } = useTabela<Historico>("conteudo_historico", { ordem: "criado_em", filtro: { coluna: "serie", valor: c.serie }, limite: 50 });
+  const { linhas: listaPadroes } = useTabela<Padrao>("padroes", { ordem: "razao_vs_mediana", limite: 200 });
+  const padroes = useMemo(() => new Map(listaPadroes.map((x) => [x.id, x])), [listaPadroes]);
+  const padrao = c.padrao_id ? padroes.get(c.padrao_id) : null;
   const [selId, setSelId] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
   const [titulo, setTitulo] = useState("");
@@ -335,8 +342,9 @@ function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVolt
             {!editando && (
               <div className="mb-6">
                 <div className="flex flex-wrap items-center gap-2">
-                  {documento ? <Selo tom="info"><Library className="size-3" />Biblioteca</Selo> : <Selo tom={ETAPAS.find((e) => e.id === c.etapa)?.tom ?? "neutro"} ponto>{nomeEtapa(c.etapa)}</Selo>}
-                  <Selo>{TIPO_RESULTADO[c.tipo] ?? c.tipo}</Selo>
+                  {documento ? <Selo tom="info"><Library className="size-3" />Biblioteca</Selo> : <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-medium leading-5 etapa-suave", ETAPAS.find((e) => e.id === c.etapa)?.cor)}><span className="size-1.5 rounded-full etapa-ponto" />{nomeEtapa(c.etapa)}</span>}
+                  {documento && <Selo>{TIPO_RESULTADO[c.tipo] ?? c.tipo}</Selo>}
+                  {!documento && !c.etiquetas?.includes("teste") && <SeloEvidencia padrao={c.padrao_id ? padroes.get(c.padrao_id) : null} />}
                   {c.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
                   {c.arquivado_em && <Selo tom="erro">Na lixeira</Selo>}
                 </div>
@@ -384,15 +392,35 @@ function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVolt
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+            {(padrao || (!documento && !c.etiquetas?.includes("teste"))) && (
+            <Cartao className="p-4 space-y-2.5">
+              <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Padrão do Radar</p>
+              <SeloEvidencia padrao={padrao} />
+              {padrao ? (
+                <>
+                  <p className="text-[14px] font-medium leading-snug">{padrao.nome}</p>
+                  {padrao.mecanismo && <p className="text-[13px] text-muted leading-relaxed">{padrao.mecanismo}</p>}
+                  <p className="text-[12px] text-muted">
+                    {Number(padrao.razao_vs_mediana).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}x a mediana de curtidas de @{padrao.perfil}
+                    {padrao.razao_comentarios != null && <> · {Number(padrao.razao_comentarios).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}x em comentários</>}
+                  </p>
+                  <a href={padrao.reel_origem} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[13px] text-brand hover:underline"><Instagram className="size-3.5" />Ver o Reel de origem</a>
+                  <p className="text-[11px] text-muted">Um Reel só; curtidas não são visualizações; a causa do desempenho é hipótese.</p>
+                </>
+              ) : (
+                <p className="text-[13px] text-muted leading-relaxed">Nenhum padrão do Radar com 2x ou mais a mediana sustenta este Reel. Decida se grava assim, reescreve sobre um padrão ou descarta.</p>
+              )}
+            </Cartao>
+            )}
             {!documento && !c.anexo_de && (
             <Cartao className="p-4 space-y-3">
               <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Etapa</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {ETAPAS.map((e) => (
                   <button key={e.id} onClick={() => e.id !== c.etapa && mover(c, e.id)}
-                    className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] text-left cursor-pointer transition",
-                      e.id === c.etapa ? "border-brand/50 bg-brand-soft text-brand font-medium" : "border-line hover:bg-surface-2")}>
-                    <span className={cn("size-2 rounded-full", e.cor)} />{e.nome}
+                    className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] text-left cursor-pointer transition", e.cor,
+                      e.id === c.etapa ? "etapa-suave font-semibold" : "border-line hover:bg-surface-2")}>
+                    <span className={cn("size-2 rounded-full etapa-ponto", e.cor)} />{e.nome}
                   </button>
                 ))}
               </div>
@@ -601,3 +629,8 @@ export function Grafico({ metricas, altura = 64 }: { metricas: Metrica[]; altura
 }
 
 export { useDados };
+
+function SeloEvidencia({ padrao }: { padrao: Padrao | null | undefined }) {
+  const f = forcaEvidencia(padrao);
+  return <span className={cn("evid", f.classe)} title={padrao ? `${padrao.nome} · @${padrao.perfil}` : "Sem padrão do Radar com evidência"}><TrendingUp className="size-3" />{f.rotulo}</span>;
+}
