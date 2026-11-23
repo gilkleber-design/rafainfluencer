@@ -41,7 +41,8 @@ export async function acaoConteudo(db: Db, membro: Membro, corpo: Record<string,
       .insert({ titulo, tipo, conteudo: texto, autor: membro.nome, versao: 1 }).select("id, serie").single();
     if (error) return falha(error.message, 500);
     const etapa = ETAPAS.includes(corpo.etapa as Etapa) ? String(corpo.etapa) : "ideia";
-    await db.from("conteudos").update({ etapa }).eq("serie", data.serie);
+    const classe = corpo.classe === "documento" ? "documento" : "peca";
+    await db.from("conteudos").update({ etapa, classe }).eq("serie", data.serie);
     await db.from("conteudo_historico").insert({ serie: data.serie, de: null, para: etapa, por: membro.nome });
     return ok({ serie: data.serie, resultado_id: data.id });
   }
@@ -96,6 +97,25 @@ export async function acaoConteudo(db: Db, membro: Membro, corpo: Record<string,
       if (error) return falha(error.message, 500);
       await db.from("conteudos").update({ titulo }).eq("serie", serie);
       return ok({ resultado_id: data.id, versao: data.versao });
+    }
+    case "conteudo_classe": {
+      const classe = String(corpo.classe);
+      if (!["peca", "documento"].includes(classe)) return falha("classe inválida");
+      await db.from("conteudos").update({ classe }).eq("serie", serie);
+      return ok();
+    }
+    case "conteudo_etiquetas": {
+      const lista = Array.isArray(corpo.etiquetas) ? corpo.etiquetas : [];
+      const etiquetas = [...new Set(lista.map((e) => String(e).trim().toLowerCase().slice(0, 30)).filter(Boolean))].slice(0, 10);
+      await db.from("conteudos").update({ etiquetas }).eq("serie", serie);
+      return ok({ etiquetas });
+    }
+    case "conteudo_anexar": {
+      const pai = corpo.anexo_de ? String(corpo.anexo_de) : null;
+      if (pai === serie) return falha("um conteúdo não pode ser anexo dele mesmo");
+      if (pai && !(await conteudo(db, pai))) return falha("conteúdo de destino não encontrado", 404);
+      await db.from("conteudos").update({ anexo_de: pai }).eq("serie", serie);
+      return ok();
     }
     case "metricas_coletar": {
       const r = await coletarMetricas(db, serie);

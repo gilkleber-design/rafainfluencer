@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Archive, ArchiveRestore, BarChart3, Check, ChevronLeft, Copy, Eye, FileText, GripVertical, History, Instagram,
-  Link2, MoreHorizontal, PencilLine, Plus, RefreshCw, Trash2, X,
+  Library, Link2, MoreHorizontal, Paperclip, PencilLine, Plus, RefreshCw, Search, Tag, Trash2, X,
 } from "lucide-react";
 import Md from "@/components/Md";
 import { ponte } from "@/lib/supabase";
@@ -81,7 +81,8 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
     for (const [serie, vs] of versoes) if (vs.some((v) => v.id === abrirResultado)) { setAberto(serie); break; }
   }, [abrirResultado, versoes]);
 
-  const ativos = conteudos.filter((c) => !c.arquivado_em);
+  const ativos = conteudos.filter((c) => !c.arquivado_em && c.classe !== "documento" && !c.anexo_de);
+  const anexosDe = (serie: string) => conteudos.filter((x) => x.anexo_de === serie && !x.arquivado_em).length;
   const arquivados = conteudos.filter((c) => c.arquivado_em);
 
   async function mover(c: Conteudo, etapa: Etapa, extra: Record<string, unknown> = {}) {
@@ -91,7 +92,7 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
 
   const sel = conteudos.find((c) => c.serie === aberto);
   if (sel) {
-    return <Detalhe c={sel} versoes={versoes.get(sel.serie) ?? []} metricas={metricas.get(sel.serie) ?? []} voltar={() => setAberto(null)} mover={mover} />;
+    return <Detalhe c={sel} todos={conteudos} versoes={versoes.get(sel.serie) ?? []} metricas={metricas.get(sel.serie) ?? []} voltar={() => setAberto(null)} abrir={setAberto} mover={mover} />;
   }
 
   return (
@@ -159,7 +160,7 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
                     {!carregando && itens.length === 0 && <p className="px-2 py-6 text-center text-[12px] text-muted">Solte aqui</p>}
                     {itens.map((c) => (
                       <CartaoConteudo
-                        key={c.serie} c={c} versoes={versoes.get(c.serie) ?? []} metricas={metricas.get(c.serie) ?? []}
+                        key={c.serie} c={c} versoes={versoes.get(c.serie) ?? []} metricas={metricas.get(c.serie) ?? []} anexos={anexosDe(c.serie)}
                         abrir={() => setAberto(c.serie)} mover={(et) => mover(c, et)}
                         arquivar={() => chamar({ acao: "conteudo_arquivar", serie: c.serie }, setErro)}
                         onDragStart={() => setArrastando(c.serie)} onDragEnd={() => { setArrastando(null); setAlvo(null); }}
@@ -183,8 +184,8 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
   );
 }
 
-function CartaoConteudo({ c, versoes, metricas, abrir, mover, arquivar, onDragStart, onDragEnd, fantasma }: {
-  c: Conteudo; versoes: Resultado[]; metricas: Metrica[]; abrir: () => void; mover: (e: Etapa) => void; arquivar: () => void;
+function CartaoConteudo({ c, versoes, metricas, anexos, abrir, mover, arquivar, onDragStart, onDragEnd, fantasma }: {
+  c: Conteudo; versoes: Resultado[]; metricas: Metrica[]; anexos: number; abrir: () => void; mover: (e: Etapa) => void; arquivar: () => void;
   onDragStart: () => void; onDragEnd: () => void; fantasma: boolean;
 }) {
   const [menu, setMenu] = useState(false);
@@ -201,6 +202,8 @@ function CartaoConteudo({ c, versoes, metricas, abrir, mover, arquivar, onDragSt
         <div className="flex items-center gap-1.5">
           <Selo tom="neutro">{TIPO_RESULTADO[c.tipo] ?? c.tipo}</Selo>
           {versoes.length > 0 && <span className="text-[11px] text-muted">v{ult?.versao}</span>}
+          {c.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
+          {anexos > 0 && <span title={`${anexos} anexo(s)`} className="inline-flex items-center gap-0.5 text-[11px] text-muted"><Paperclip className="size-3" />{anexos}</span>}
           <button onClick={(e) => { e.stopPropagation(); setMenu(!menu); }} aria-label="Ações" className="ml-auto grid size-7 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink cursor-pointer">
             <MoreHorizontal className="size-4" />
           </button>
@@ -277,9 +280,14 @@ function PedirLink({ c, fechar, confirmar }: { c: Conteudo | null; fechar: () =>
 }
 
 /* ================================================================ Detalhe */
-function Detalhe({ c, versoes, metricas, voltar, mover }: {
-  c: Conteudo; versoes: Resultado[]; metricas: Metrica[]; voltar: () => void; mover: (c: Conteudo, e: Etapa, extra?: Record<string, unknown>) => Promise<void>;
+function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVoltar = "Conteúdos" }: {
+  c: Conteudo; todos: Conteudo[]; versoes: Resultado[]; metricas: Metrica[]; voltar: () => void; abrir: (serie: string) => void;
+  mover: (c: Conteudo, e: Etapa, extra?: Record<string, unknown>) => Promise<void>; rotuloVoltar?: string;
 }) {
+  const documento = c.classe === "documento";
+  const anexos = todos.filter((x) => x.anexo_de === c.serie && !x.arquivado_em);
+  const pai = c.anexo_de ? todos.find((x) => x.serie === c.anexo_de) : undefined;
+  const pecas = todos.filter((x) => x.classe !== "documento" && !x.arquivado_em && x.serie !== c.serie && !x.anexo_de);
   const { linhas: historico } = useTabela<Historico>("conteudo_historico", { ordem: "criado_em", filtro: { coluna: "serie", valor: c.serie }, limite: 50 });
   const [selId, setSelId] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
@@ -304,7 +312,7 @@ function Detalhe({ c, versoes, metricas, voltar, mover }: {
     <div className="flex h-full flex-col overflow-hidden">
       <div className="border-b border-line bg-surface/70 backdrop-blur">
         <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-2 px-4 py-3 md:px-8">
-          <Botao variante="fantasma" tamanho="sm" className="-ml-2" onClick={voltar}><ChevronLeft className="size-4" />Conteúdos</Botao>
+          <Botao variante="fantasma" tamanho="sm" className="-ml-2" onClick={voltar}><ChevronLeft className="size-4" />{rotuloVoltar}</Botao>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {!editando && sel && (
               <>
@@ -327,10 +335,16 @@ function Detalhe({ c, versoes, metricas, voltar, mover }: {
             {!editando && (
               <div className="mb-6">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Selo tom={ETAPAS.find((e) => e.id === c.etapa)?.tom ?? "neutro"} ponto>{nomeEtapa(c.etapa)}</Selo>
+                  {documento ? <Selo tom="info"><Library className="size-3" />Biblioteca</Selo> : <Selo tom={ETAPAS.find((e) => e.id === c.etapa)?.tom ?? "neutro"} ponto>{nomeEtapa(c.etapa)}</Selo>}
                   <Selo>{TIPO_RESULTADO[c.tipo] ?? c.tipo}</Selo>
+                  {c.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
                   {c.arquivado_em && <Selo tom="erro">Na lixeira</Selo>}
                 </div>
+                {pai && (
+                  <button onClick={() => abrir(pai.serie)} className="mt-2 inline-flex items-center gap-1 text-[13px] text-brand hover:underline cursor-pointer">
+                    <Paperclip className="size-3.5" />Anexo de {pai.titulo}
+                  </button>
+                )}
                 <h1 className="mt-2 font-display text-[28px] leading-tight font-semibold tracking-tight">{c.titulo}</h1>
               </div>
             )}
@@ -370,6 +384,7 @@ function Detalhe({ c, versoes, metricas, voltar, mover }: {
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+            {!documento && !c.anexo_de && (
             <Cartao className="p-4 space-y-3">
               <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Etapa</p>
               <div className="grid grid-cols-2 gap-1.5">
@@ -382,8 +397,26 @@ function Detalhe({ c, versoes, metricas, voltar, mover }: {
                 ))}
               </div>
             </Cartao>
+            )}
 
-            {(c.etapa === "publicado" || c.url_publicacao) && (
+            {anexos.length > 0 && (
+              <Cartao className="p-4">
+                <p className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted"><Paperclip className="size-3.5" />Anexos</p>
+                <ul className="space-y-1">
+                  {anexos.map((a) => (
+                    <li key={a.serie}>
+                      <button onClick={() => abrir(a.serie)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-surface-2 cursor-pointer">
+                        <FileText className="size-3.5 shrink-0 text-muted" /><span className="min-w-0 flex-1 truncate">{a.titulo}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Cartao>
+            )}
+
+            <Organizar c={c} pecas={pecas} setErro={setErro} />
+
+            {!documento && (c.etapa === "publicado" || c.url_publicacao) && (
               <Cartao className="p-4 space-y-3">
                 <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Publicação</p>
                 <div className="flex gap-2">
@@ -408,6 +441,123 @@ function Detalhe({ c, versoes, metricas, voltar, mover }: {
             </Cartao>
           </aside>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function Etiqueta({ nome, remover }: { nome: string; remover?: () => void }) {
+  const teste = nome === "teste";
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium", teste ? "bg-warn-soft text-warn" : "bg-surface-2 text-muted")}>
+      <Tag className="size-2.5" />{nome}
+      {remover && <button onClick={remover} aria-label={`Tirar etiqueta ${nome}`} className="-mr-0.5 cursor-pointer hover:text-ink"><X className="size-3" /></button>}
+    </span>
+  );
+}
+
+/** Onde o conteúdo fica (quadro ou Biblioteca), de quem é anexo e suas etiquetas. */
+function Organizar({ c, pecas, setErro }: { c: Conteudo; pecas: Conteudo[]; setErro: (e: string | null) => void }) {
+  const [nova, setNova] = useState("");
+  const etiquetas = c.etiquetas ?? [];
+  const salvarEtiquetas = (lista: string[]) => chamar({ acao: "conteudo_etiquetas", serie: c.serie, etiquetas: lista }, setErro);
+  return (
+    <Cartao className="p-4 space-y-4">
+      <div className="space-y-2">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Onde fica</p>
+        <div className="flex rounded-xl bg-surface-2 p-0.5">
+          {([["peca", "Quadro (peça)"], ["documento", "Biblioteca"]] as const).map(([v, nome]) => (
+            <button key={v} onClick={() => c.classe !== v && chamar({ acao: "conteudo_classe", serie: c.serie, classe: v }, setErro)}
+              className={cn("flex-1 rounded-[10px] px-2 py-1 text-[12px] font-medium cursor-pointer", c.classe === v ? "bg-surface shadow-sm" : "text-muted hover:text-ink")}>{nome}</button>
+          ))}
+        </div>
+        <label className="block space-y-1">
+          <span className="text-[12px] text-muted">Anexo de</span>
+          <select value={c.anexo_de ?? ""} onChange={(e) => chamar({ acao: "conteudo_anexar", serie: c.serie, anexo_de: e.target.value || null }, setErro)}
+            className={cn(campo, "h-9 text-[13px]")}>
+            <option value="">Nenhum (item solto)</option>
+            {pecas.map((p) => <option key={p.serie} value={p.serie}>{p.titulo}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="space-y-2">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Etiquetas</p>
+        {etiquetas.length > 0 && <div className="flex flex-wrap gap-1.5">{etiquetas.map((t) => <Etiqueta key={t} nome={t} remover={() => salvarEtiquetas(etiquetas.filter((x) => x !== t))} />)}</div>}
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (nova.trim()) { salvarEtiquetas([...etiquetas, nova]); setNova(""); } }}>
+          <input placeholder="Nova etiqueta" value={nova} onChange={(e) => setNova(e.target.value)} className={cn(campo, "h-9 text-[13px]")} />
+          <Botao tamanho="icone" title="Adicionar etiqueta" disabled={!nova.trim()}><Plus className="size-4" /></Botao>
+        </form>
+      </div>
+    </Cartao>
+  );
+}
+
+/* ================================================================ Biblioteca */
+const FILTROS = [["", "Tudo"], ["pauta", "Pautas"], ["pesquisa", "Pesquisas"], ["relatorio", "Relatórios"], ["roteiro", "Roteiros"], ["outro", "Outros"]] as const;
+
+export function Biblioteca() {
+  const { conteudos, carregando, versoes, metricas } = useDados();
+  const [aberto, setAberto] = useState<string | null>(null);
+  const [tipo, setTipo] = useState("");
+  const [busca, setBusca] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const docs = conteudos.filter((c) => c.classe === "documento" && !c.arquivado_em)
+    .sort((a, b) => b.atualizado_em.localeCompare(a.atualizado_em));
+  const contagem = (t: string) => docs.filter((d) => !t || d.tipo === t).length;
+  const lista = docs.filter((d) => (!tipo || d.tipo === tipo) && (!busca || d.titulo.toLowerCase().includes(busca.toLowerCase())));
+
+  async function mover(c: Conteudo, etapa: Etapa, extra: Record<string, unknown> = {}) {
+    await chamar({ acao: "conteudo_mover", serie: c.serie, etapa, ...extra }, setErro);
+  }
+
+  const sel = conteudos.find((c) => c.serie === aberto);
+  if (sel) return <Detalhe c={sel} todos={conteudos} versoes={versoes.get(sel.serie) ?? []} metricas={metricas.get(sel.serie) ?? []} voltar={() => setAberto(null)} abrir={setAberto} mover={mover} rotuloVoltar="Biblioteca" />;
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto max-w-[1000px] px-4 pb-10 md:px-8">
+        <div className="pt-6 pb-4">
+          <h1 className="font-display text-[26px] font-semibold tracking-tight">Biblioteca</h1>
+          <p className="mt-0.5 text-[14px] text-muted">Pautas, pesquisas, relatórios e fichas de apoio. O que é peça de conteúdo fica no quadro.</p>
+        </div>
+        {erro && <Aviso className="mb-3">{erro}</Aviso>}
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {FILTROS.filter(([t]) => !t || contagem(t) > 0).map(([t, nome]) => (
+              <button key={t} onClick={() => setTipo(t)} className={cn("rounded-full border px-3 py-1 text-[13px] font-medium cursor-pointer transition",
+                tipo === t ? "border-brand/50 bg-brand-soft text-brand" : "border-line text-muted hover:text-ink")}>
+                {nome} <span className="tabular-nums opacity-70">{contagem(t)}</span>
+              </button>
+            ))}
+          </div>
+          <label className="relative ml-auto w-full sm:w-60">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+            <input placeholder="Buscar pelo título" value={busca} onChange={(e) => setBusca(e.target.value)} className={cn(campo, "h-9 pl-9 text-[13px]")} />
+          </label>
+        </div>
+        {carregando ? <Esqueleto className="h-40" /> : lista.length === 0 ? (
+          <Cartao><Vazio icone={<Library className="size-5" />} titulo={docs.length ? "Nada com esse filtro" : "Biblioteca vazia"}>Pautas, pesquisas e relatórios que os agentes entregarem aparecem aqui.</Vazio></Cartao>
+        ) : (
+          <Cartao className="divide-y divide-line">
+            {lista.map((d) => {
+              const ult = versoes.get(d.serie)?.[0];
+              const pai = d.anexo_de ? conteudos.find((x) => x.serie === d.anexo_de) : undefined;
+              return (
+                <button key={d.serie} onClick={() => setAberto(d.serie)} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-surface-2/60 cursor-pointer md:px-5">
+                  <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-muted"><FileText className="size-4" /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-medium">{d.titulo}</p>
+                    <p className="truncate text-[12px] text-muted">
+                      {TIPO_RESULTADO[d.tipo] ?? d.tipo}{ult && ` · v${ult.versao} · ${ult.autor}`} · {quando(d.atualizado_em)}
+                    </p>
+                    {pai && <p className="truncate text-[12px] text-brand"><Paperclip className="inline size-3" /> Anexo de {pai.titulo}</p>}
+                  </div>
+                  {d.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
+                </button>
+              );
+            })}
+          </Cartao>
+        )}
       </div>
     </div>
   );
