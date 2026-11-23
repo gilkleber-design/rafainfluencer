@@ -61,3 +61,15 @@ export function quando(s: string) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "") + `, ${hora}`;
 }
 export const hora = (s: string) => new Date(s).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+export const ETAPAS: { id: import("@/lib/tipos").Etapa; nome: string; cor: string; tom: Tom }[] = [
+  { id: "ideia", nome: "Ideia", cor: "bg-muted", tom: "neutro" },
+  { id: "roteiro", nome: "Roteiro", cor: "bg-info", tom: "info" },
+  { id: "aprovado", nome: "Aprovado", cor: "bg-ok", tom: "ok" },
+  { id: "em_producao", nome: "Em produção", cor: "bg-warn", tom: "alerta" },
+  { id: "gravado", nome: "Gravado", cor: "bg-gold", tom: "ouro" },
+  { id: "editado", nome: "Editado", cor: "bg-brand", tom: "marca" },
+  { id: "publicado", nome: "Publicado", cor: "bg-[#2f6f4e]", tom: "ok" },
+];
+export const nomeEtapa = (id: string) => ETAPAS.find((e) => e.id === id)?.nome ?? (id === "arquivado" ? "Lixeira" : id);
+export const num = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleString("pt-BR"));

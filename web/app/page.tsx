@@ -1,16 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { CheckCheck, FileText, KanbanSquare, LogOut, Mail, MessagesSquare, Sparkles } from "lucide-react";
+import { BarChart3, CheckCheck, KanbanSquare, Layers, LogOut, Mail, MessagesSquare, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Chat from "@/components/Chat";
-import { Aprovacoes, Resultados, Tarefas } from "@/components/Paineis";
+import { Aprovacoes, Tarefas } from "@/components/Paineis";
+import { Conteudos } from "@/components/Conteudos";
+import { Metricas } from "@/components/Metricas";
 import { useTabela } from "@/lib/useTabela";
 import type { Aprovacao } from "@/lib/tipos";
 import { Aviso, Botao, Cartao } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
-type Aba = "chat" | "tarefas" | "resultados" | "aprovacoes";
+type Aba = "chat" | "conteudos" | "tarefas" | "aprovacoes" | "metricas";
 
 export default function Pagina() {
   const [sessao, setSessao] = useState<Session | null | undefined>(undefined);
@@ -113,15 +115,16 @@ function Login() {
 
 const ABAS: { id: Aba; nome: string; icone: React.ElementType }[] = [
   { id: "chat", nome: "Chat", icone: MessagesSquare },
-  { id: "tarefas", nome: "Tarefas", icone: KanbanSquare },
-  { id: "resultados", nome: "Resultados", icone: FileText },
+  { id: "conteudos", nome: "Conteúdos", icone: Layers },
   { id: "aprovacoes", nome: "Aprovações", icone: CheckCheck },
+  { id: "tarefas", nome: "Tarefas", icone: KanbanSquare },
+  { id: "metricas", nome: "Métricas", icone: BarChart3 },
 ];
 
 function Studio({ email }: { email: string }) {
   const [aba, setAba] = useState<Aba>("chat");
   const [conversaId, setConversaId] = useState<string | null>(null);
-  const [resultadoAberto, setResultadoAberto] = useState<string | null>(null);
+  const [abrir, setAbrir] = useState<{ resultado?: string; serie?: string; n: number }>({ n: 0 });
   const { linhas: aprovacoes } = useTabela<Aprovacao>("aprovacoes", { ordem: "criado_em" });
   const pendentes = aprovacoes.filter((a) => a.estado === "pendente").length;
   const sair = () => supabase().auth.signOut();
@@ -135,7 +138,7 @@ function Studio({ email }: { email: string }) {
           {ABAS.map(({ id, nome, icone: Icone }) => (
             <button
               key={id}
-              onClick={() => setAba(id)}
+              onClick={() => { if (id === "conteudos") setAbrir({ n: abrir.n + 1 }); setAba(id); }}
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition cursor-pointer",
                 aba === id ? "bg-brand-soft text-brand" : "text-muted hover:bg-surface-2 hover:text-ink",
@@ -169,17 +172,18 @@ function Studio({ email }: { email: string }) {
       <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {aba === "chat" && <Chat conversaId={conversaId} setConversaId={setConversaId} />}
         {aba === "tarefas" && <Tarefas />}
-        {aba === "resultados" && <Resultados key={resultadoAberto ?? "r"} abrirId={resultadoAberto} />}
-        {aba === "aprovacoes" && <Aprovacoes verResultado={(id) => { setResultadoAberto(id); setAba("resultados"); }} />}
+        {aba === "conteudos" && <Conteudos key={abrir.n} abrirResultado={abrir.resultado} abrirSerie={abrir.serie} />}
+        {aba === "aprovacoes" && <Aprovacoes verResultado={(id) => { setAbrir({ resultado: id, n: abrir.n + 1 }); setAba("conteudos"); }} />}
+        {aba === "metricas" && <Metricas abrir={(serie) => { setAbrir({ serie, n: abrir.n + 1 }); setAba("conteudos"); }} />}
       </main>
 
       {/* Abas (celular) */}
-      <nav className="lg:hidden grid grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+      <nav className="lg:hidden grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
         {ABAS.map(({ id, nome, icone: Icone }) => (
           <button key={id} onClick={() => setAba(id)} className={cn("relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium cursor-pointer", aba === id ? "text-brand" : "text-muted")}>
             <Icone className="size-5" />
             {nome}
-            {id === "aprovacoes" && pendentes > 0 && <span className="absolute right-[22%] top-1 grid min-w-4 h-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-ink">{pendentes}</span>}
+            {id === "aprovacoes" && pendentes > 0 && <span className="absolute right-[18%] top-1 grid min-w-4 h-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-ink">{pendentes}</span>}
           </button>
         ))}
       </nav>

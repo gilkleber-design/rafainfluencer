@@ -2,10 +2,12 @@
  * ponte: única porta do painel para os agentes.
  *  POST { acao: "mensagem", conversa_id?, texto, anexos? }  -> grava a mensagem e envia ao Command Center
  *  POST { acao: "decisao", aprovacao_id, estado: "aprovado"|"alteracao_pedida", comentario? }
+ *  POST { acao: "conteudo_*" | "metricas_coletar", serie, ... }  -> ciclo de vida do conteúdo (ver _shared/conteudos.ts)
  * Responde na hora; o acompanhamento dos eventos continua em segundo plano (EdgeRuntime.waitUntil)
  * e o cron `sync` cobre o que sobrar.
  */
 import { cors, dbAdmin, json, lerConfig, membroDaRequisicao, segredoConfere, segredoCron } from "../_shared/db.ts";
+import { acaoConteudo } from "../_shared/conteudos.ts";
 import { acompanhar, gastoDoMes, type Limites, LIMITES_PADRAO, obterMotor } from "../_shared/processar.ts";
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
@@ -28,6 +30,12 @@ Deno.serve(async (req) => {
     ? { email: "teste@servidor", nome: String(corpo.como ?? "Teste técnico").slice(0, 40) }
     : await membroDaRequisicao(db, req);
   if (!membro) return json({ erro: "acesso negado" }, 403);
+
+  // Gestão dos conteúdos (etapas, lixeira, edição manual, métricas): não passa pelos agentes nem gasta IA.
+  if (typeof corpo.acao === "string" && /^(conteudo|metricas)_/.test(corpo.acao)) {
+    const r = await acaoConteudo(db, membro, corpo);
+    return json(r.corpo, r.status);
+  }
 
   const limites = { ...LIMITES_PADRAO, ...(await lerConfig<Partial<Limites>>(db, "limites") ?? {}) };
   const gasto = await gastoDoMes(db);

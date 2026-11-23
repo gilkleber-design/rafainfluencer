@@ -14,7 +14,7 @@ export function supabase(): SupabaseClient {
 }
 
 /** Chama a Edge Function `ponte` com o token do usuário logado. */
-export async function ponte(corpo: Record<string, unknown>): Promise<{ ok?: boolean; erro?: string; conversa_id?: string }> {
+export async function ponte(corpo: Record<string, unknown>): Promise<{ ok?: boolean; erro?: string; conversa_id?: string; serie?: string; versao?: number; curtidas?: number | null; comentarios?: number | null }> {
   const { data, error } = await supabase().functions.invoke("ponte", { body: corpo });
   if (error) {
     let msg = error.message;
