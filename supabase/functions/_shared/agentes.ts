@@ -32,6 +32,7 @@ Todo roteiro entregue tem, em markdown, nesta ordem:
 10. Legenda e chamada para ação (identifique publi ou afiliado quando houver)
 
 Como entregar:
+- Numa revisão, leia antes a versão anterior com \`ler_resultado\` e altere só o que foi pedido.
 - Salve o material com a ferramenta \`entregar_resultado\`. Numa revisão, passe \`substitui_resultado_id\` com o id da versão anterior, para virar a versão seguinte.
 - Depois responda ao Command Center em uma ou duas linhas: o id do resultado e a versão. Não repita o roteiro inteiro na resposta.
 `.trim();
@@ -43,7 +44,7 @@ ${REGRAS_COMUNS}
 Como trabalhar:
 - Responda de forma direta. Perguntas simples você responde sozinho, sem delegar.
 - Para cada trabalho de produção (roteiro, pauta, revisão de roteiro), registre uma tarefa com \`registrar_tarefa\` e delegue ao agente "Produção" com um briefing completo: objetivo, formato, duração, produtos, restrições e, em revisões, o id do resultado anterior e o pedido de alteração exato. O agente de Produção não vê esta conversa; tudo que ele precisa vai no briefing.
-- Quando a Produção entregar, confira o material contra o pedido. Então marque a tarefa como \`aguardando_aprovacao\` com \`atualizar_tarefa\` e abra um pedido de aprovação com \`pedir_aprovacao\` apontando o resultado.
+- Quando a Produção entregar, leia o texto salvo com \`ler_resultado\` e confira contra o pedido. Não peça à Produção para colar o roteiro na resposta. Então marque a tarefa como \`aguardando_aprovacao\` com \`atualizar_tarefa\` e abra um pedido de aprovação com \`pedir_aprovacao\` apontando o resultado.
 - Mensagens que começam com "[Aprovação" são decisões do painel. "alteração pedida": registre nova tarefa de revisão e delegue à Produção com o comentário; "aprovado": marque a tarefa como concluída e confirme em uma linha.
 - Use \`consultar_instagram\` só para dados públicos de perfis (leitura). Ela não publica nada.
 - Ao final de cada turno, diga em uma ou duas linhas o que foi feito e o que está pendente.
@@ -79,6 +80,15 @@ export const FERRAMENTA_ATUALIZAR_TAREFA = {
   }, ["codigo", "estado"]),
 };
 
+export const FERRAMENTA_LER_RESULTADO = {
+  type: "custom" as const,
+  name: "ler_resultado",
+  description: "Lê o conteúdo completo de um resultado salvo no painel (roteiro, pauta, pesquisa), com título, versão e autor. Somente leitura. Sem id, lista os 20 resultados mais recentes (id, título, versão).",
+  input_schema: objeto({
+    resultado_id: { type: "string", description: "Id do resultado. Omita para listar os recentes." },
+  }, []),
+};
+
 export const FERRAMENTAS_COMMAND_CENTER = [
   {
     type: "custom" as const,
@@ -92,6 +102,7 @@ export const FERRAMENTAS_COMMAND_CENTER = [
   },
   FERRAMENTA_ATUALIZAR_TAREFA,
   FERRAMENTA_ENTREGAR,
+  FERRAMENTA_LER_RESULTADO,
   {
     type: "custom" as const,
     name: "pedir_aprovacao",
@@ -126,7 +137,7 @@ export function definicaoProducao(modelo: string, esforco: Esforco) {
     description: "Roteirista e diretor de produção de Reels de maquiagem. Dê a ele um briefing completo (objetivo, formato, produtos, restrições, e numa revisão o id do resultado anterior e o pedido de alteração); ele salva o roteiro no painel e devolve o id e a versão.",
     model: { id: modelo, effort: esforco },
     system: PROMPT_PRODUCAO,
-    tools: [TOOLSET_MINIMO, FERRAMENTA_ENTREGAR, FERRAMENTA_ATUALIZAR_TAREFA],
+    tools: [TOOLSET_MINIMO, FERRAMENTA_ENTREGAR, FERRAMENTA_ATUALIZAR_TAREFA, FERRAMENTA_LER_RESULTADO],
   };
 }
 

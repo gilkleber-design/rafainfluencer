@@ -96,6 +96,19 @@ async function executarFerramenta(db: Db, conversaId: string, nome: string, e: R
       if (error) throw error;
       return JSON.stringify({ aprovacao_id: data.id, estado: "pendente" });
     }
+    case "ler_resultado": {
+      if (!e.resultado_id) {
+        const { data, error } = await db.from("resultados").select("id, titulo, versao, tipo, criado_em")
+          .order("criado_em", { ascending: false }).limit(20);
+        if (error) throw error;
+        return JSON.stringify({ recentes: data });
+      }
+      const { data, error } = await db.from("resultados").select("id, titulo, versao, tipo, autor, conteudo, serie")
+        .eq("id", String(e.resultado_id)).maybeSingle();
+      if (error) throw error;
+      if (!data) return JSON.stringify({ erro: "resultado não encontrado" });
+      return JSON.stringify(data);
+    }
     case "consultar_instagram": {
       const url = Deno.env.get("PESQUISA_URL");
       const token = Deno.env.get("PESQUISA_TOKEN");
