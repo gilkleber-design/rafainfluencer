@@ -111,7 +111,7 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
               <Trash2 className="size-3.5" />Lixeira{arquivados.length > 0 && <span className="text-muted">({arquivados.length})</span>}
             </button>
           </div>
-          <Botao variante="primario" tamanho="sm" onClick={() => setNovo(true)}><Plus className="size-4" />Nova ideia</Botao>
+          <Botao variante="primario" tamanho="md" onClick={() => setNovo(true)}><Plus className="size-4" />Novo conteúdo</Botao>
         </div>
       </div>
       {erro && <div className="px-4 md:px-8"><Aviso className="mb-3">{erro}</Aviso></div>}
@@ -136,7 +136,7 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden px-4 pb-6 md:px-8 snap-x snap-mandatory">
-          <div className="flex h-full gap-3">
+          <div className="flex h-full gap-3 lg:gap-2">
             {ETAPAS.map((e) => {
               const itens = ativos.filter((c) => c.etapa === e.id).sort((a, b) => b.ordem - a.ordem);
               return (
@@ -149,13 +149,12 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
                     const c = conteudos.find((x) => x.serie === ev.dataTransfer.getData("text/plain"));
                     if (c && c.etapa !== e.id) mover(c, e.id, { ordem: Date.now() / 1000 });
                   }}
-                  className={cn("flex h-full w-[264px] min-w-[240px] shrink-0 snap-start flex-col rounded-2xl border p-2 transition-colors", e.cor,
+                  className={cn("flex h-full w-[264px] min-w-[240px] shrink-0 snap-start flex-col rounded-2xl border p-1.5 transition-colors lg:w-auto lg:min-w-[148px] lg:flex-1 lg:basis-0", e.cor,
                     alvo === e.id && arrastando ? "border-brand/50 bg-brand-soft" : "border-line/60 bg-surface/60")}
                 >
-                  <div className={cn("mb-2 flex items-center gap-2 rounded-xl border px-3 py-2 etapa-suave", e.cor)}>
-                    <span className={cn("size-2 rounded-full etapa-ponto", e.cor)} />
-                    <span className="text-[13px] font-semibold">{e.nome}</span>
-                    <span className="ml-auto text-[12px] font-medium tabular-nums">{itens.length}</span>
+                  <div className={cn("mb-2 flex items-center gap-1.5 rounded-xl px-3 py-2.5 etapa-faixa", e.cor)}>
+                    <span className="truncate text-[13px] font-semibold">{e.nome}</span>
+                    <span className="text-[13px] tabular-nums opacity-85">· {itens.length}</span>
                   </div>
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2">
                     {carregando && <Esqueleto className="h-20" />}
@@ -203,20 +202,20 @@ function CartaoConteudo({ c, versoes, metricas, anexos, padrao, abrir, mover, ar
     >
       <Cartao className="p-3 space-y-2 bg-surface-2 shadow-none hover:border-brand/40 transition-colors">
         <div className="flex items-center gap-1.5">
-          <Selo tom="neutro">Reel</Selo>
-          {versoes.length > 0 && <span className="text-[11px] text-muted">v{ult?.versao}</span>}
+          <span className="text-[12px] font-medium tracking-wide text-ink-2">{c.codigo ?? "Reel"}</span>
           {c.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
-          {anexos > 0 && <span title={`${anexos} anexo(s)`} className="inline-flex items-center gap-0.5 text-[11px] text-muted"><Paperclip className="size-3" />{anexos}</span>}
           <button onClick={(e) => { e.stopPropagation(); setMenu(!menu); }} aria-label="Ações" className="ml-auto grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-3 hover:text-ink cursor-pointer">
             <MoreHorizontal className="size-4" />
           </button>
         </div>
-        <button onClick={abrir} className="block w-full text-left text-[14px] font-medium leading-snug text-ink cursor-pointer hover:text-brand">{nomeConteudo(c)}</button>
-        {!c.etiquetas?.includes("teste") && <SeloEvidencia padrao={padrao} />}
-        <div className="flex items-center gap-2 text-[11px] text-muted">
-          {ult && <><Avatar nome={ult.autor} tipo={/produ/i.test(ult.autor) ? "agente" : "humano"} tamanho={18} /><span className="truncate">{ult.autor}</span><span>·</span></>}
-          <span className="whitespace-nowrap">{quando(c.atualizado_em)}</span>
-          <GripVertical className="ml-auto size-3.5 opacity-0 group-hover:opacity-60" />
+        <button onClick={abrir} title={`${nomeConteudo(c)} · atualizado ${quando(c.atualizado_em)}`} className="block w-full text-left cursor-pointer group/t">
+          <span className="block text-[15px] font-semibold leading-snug text-ink group-hover/t:text-brand">{partes(c).formato}</span>
+          {partes(c).tema && <span className="mt-1 block text-[13px] leading-snug text-ink-2">{partes(c).tema}</span>}
+        </button>
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          {versoes.length > 0 && <span className="rounded-md border border-line px-1.5 text-[11px] leading-5 text-ink-2">v{ult?.versao}</span>}
+          {anexos > 0 && <span title={`${anexos} anexo(s)`} className="inline-flex items-center gap-0.5 text-[11px] text-ink-2"><Paperclip className="size-3.5" />{anexos > 1 ? anexos : ""}</span>}
+          {!c.etiquetas?.includes("teste") && <SeloEvidencia padrao={padrao} curto />}
         </div>
         {c.etapa === "publicado" && (
           <div className="flex items-center gap-3 rounded-lg bg-surface-2/70 px-2.5 py-1.5 text-[12px]">
@@ -630,7 +629,15 @@ export function Grafico({ metricas, altura = 64 }: { metricas: Metrica[]; altura
 
 export { useDados };
 
-function SeloEvidencia({ padrao }: { padrao: Padrao | null | undefined }) {
+function SeloEvidencia({ padrao, curto }: { padrao: Padrao | null | undefined; curto?: boolean }) {
   const f = forcaEvidencia(padrao);
-  return <span className={cn("evid", f.classe)} title={padrao ? `${padrao.nome} · @${padrao.perfil}` : "Sem padrão do Radar com evidência"}><TrendingUp className="size-3" />{f.rotulo}</span>;
+  const rotulo = curto ? f.rotulo.replace(/^Evidência /, "").replace(/x$/, "×") : f.rotulo;
+  return <span className={cn("evid", f.classe, curto && "evid-cheio")} title={padrao ? `Evidência do Radar: ${padrao.nome} · @${padrao.perfil}` : "Sem padrão do Radar com evidência"}>{!curto && <TrendingUp className="size-3" />}{rotulo}</span>;
+}
+
+/** "Formato · Tema" vira título curto (formato) + subtítulo (tema), como no cartão do mockup. */
+function partes(c: Conteudo): { formato: string; tema: string } {
+  if (c.etiquetas?.includes("teste") || !c.codigo) return { formato: nomeConteudo(c), tema: "" };
+  const [formato, ...resto] = c.titulo.split(" · ");
+  return { formato, tema: resto.join(" · ") };
 }

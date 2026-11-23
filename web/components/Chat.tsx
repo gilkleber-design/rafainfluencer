@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronLeft, MessageSquarePlus, MessagesSquare, Paperclip, Sparkles, X } from "lucide-react";
+import { ArrowUp, ChevronLeft, MessageSquarePlus, MessagesSquare, Paperclip, Sparkles, X, CircleCheck } from "lucide-react";
 import Md from "@/components/Md";
 import { ponte, supabase } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
@@ -198,9 +198,11 @@ function Bolha({ m }: { m: Mensagem }) {
   if (m.autor === "sistema") {
     return (
       <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-[12px] text-muted">
-          <MessagesSquare className="size-3" />{m.texto} · {hora(m.criado_em)}
-        </span>
+        <div role="status" className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-line bg-surface-2 px-4 py-3">
+          <CircleCheck className="size-5 shrink-0 text-ok" aria-hidden />
+          <span className="min-w-0 flex-1 text-[13px] font-medium text-ink">{m.texto}</span>
+          <span className="text-[11px] text-muted tabular-nums">{hora(m.criado_em)}</span>
+        </div>
       </div>
     );
   }

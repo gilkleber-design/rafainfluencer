@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { BarChart3, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare } from "lucide-react";
+import { BarChart3, Bell, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare } from "lucide-react";
 import { supabase, variaveisFaltando } from "@/lib/supabase";
 import Chat from "@/components/Chat";
 import { Aprovacoes, Tarefas } from "@/components/Paineis";
@@ -124,6 +124,8 @@ function Login() {
   );
 }
 
+const PAPEIS: Record<string, string> = { gestor: "Gestor", criadora: "Criadora" };
+
 const ABAS: { id: Aba; nome: string; curto?: string; icone: React.ElementType }[] = [
   { id: "conteudos", nome: "Conteúdos", icone: Layers },
   { id: "chat", nome: "Chat", icone: MessagesSquare },
@@ -140,6 +142,20 @@ function Studio({ email }: { email: string }) {
   const { linhas: aprovacoes } = useTabela<Aprovacao>("aprovacoes", { ordem: "criado_em" });
   const pendentes = aprovacoes.filter((a) => a.estado === "pendente").length;
   const sair = () => supabase().auth.signOut();
+  const [membro, setMembro] = useState<{ nome: string; papel: string } | null>(null);
+  useEffect(() => {
+    supabase().from("membros").select("nome, papel").eq("email", email).maybeSingle().then(({ data }) => setMembro(data));
+  }, [email]);
+  const nome = membro?.nome ?? email;
+  const papel = membro ? `${PAPEIS[membro.papel] ?? membro.papel} · Rafa Studio` : "Rafa Studio";
+  const avatar = <div aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-brand text-[14px] font-semibold text-brand-ink">{nome.slice(0, 1).toUpperCase()}</div>;
+  const sino = (
+    <button onClick={() => setAba("aprovacoes")} aria-label={pendentes > 0 ? `Aprovações: ${pendentes} esperando sua decisão` : "Aprovações"} title={pendentes > 0 ? `${pendentes} esperando sua decisão` : "Nada esperando você"}
+      className="relative grid size-11 place-items-center rounded-full text-ink-2 hover:bg-surface-2 hover:text-ink cursor-pointer">
+      <Bell className="size-5" />
+      {pendentes > 0 && <span className="absolute right-1.5 top-1.5 grid min-w-4 h-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-ink">{pendentes}</span>}
+    </button>
+  );
 
   return (
     <div className="flex h-dvh flex-col lg:flex-row">
@@ -155,7 +171,7 @@ function Studio({ email }: { email: string }) {
               aria-current={aba === id ? "page" : undefined}
               className={cn(
                 "relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-colors duration-150 cursor-pointer",
-                aba === id ? "bg-surface-3 text-ink before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full before:bg-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                aba === id ? "bg-[color-mix(in_srgb,var(--rs-mauve)_30%,var(--rs-plum))] text-ink before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full before:bg-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
               )}
             >
               <Icone className={cn("size-[18px]", aba === id && "text-brand")} />
@@ -164,15 +180,12 @@ function Studio({ email }: { email: string }) {
             </button>
           ))}
         </nav>
-        {pendentes > 0 && aba !== "aprovacoes" && (
-          <Cartao className="mt-6 p-3.5 bg-warn-soft border-warn/30">
-            <p className="text-[13px] font-medium text-warn">{pendentes === 1 ? "1 entrega esperando sua decisão" : `${pendentes} entregas esperando sua decisão`}</p>
-            <Botao tamanho="sm" variante="contorno" className="mt-2.5 w-full" onClick={() => setAba("aprovacoes")}>Revisar agora</Botao>
-          </Cartao>
-        )}
-        <div className="mt-auto flex items-center gap-2.5 rounded-xl px-2 py-2">
-          <div className="grid size-8 place-items-center rounded-full bg-surface-2 text-[13px] font-semibold">{email.slice(0, 1).toUpperCase()}</div>
-          <div className="min-w-0 flex-1 truncate text-[13px] text-ink-2" title={email}>{email}</div>
+        <div className="mt-auto flex items-center gap-2.5 border-t border-line px-1 pt-4">
+          {avatar}
+          <div className="min-w-0 flex-1 leading-tight" title={email}>
+            <div className="truncate text-[14px] font-medium text-ink">{nome}</div>
+            <div className="truncate text-[12px] text-muted">{papel}</div>
+          </div>
           <Botao variante="fantasma" tamanho="icone" title="Sair" aria-label="Sair" onClick={sair}><LogOut className="size-4" /></Botao>
         </div>
       </aside>
@@ -180,12 +193,17 @@ function Studio({ email }: { email: string }) {
       {/* Topo (celular) */}
       <header className="lg:hidden flex items-center justify-between border-b border-line bg-surface px-4 py-2 pt-[max(.5rem,env(safe-area-inset-top))]">
         <Marca className="h-9 w-auto -ml-1.5" />
-        <Botao variante="fantasma" tamanho="icone" aria-label="Sair" onClick={sair}><LogOut className="size-4" /></Botao>
+        <div className="flex items-center">
+          {sino}
+          <Botao variante="fantasma" tamanho="icone" className="size-11" aria-label="Sair" onClick={sair}><LogOut className="size-4" /></Botao>
+        </div>
       </header>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="hidden lg:flex h-14 shrink-0 items-center border-b border-line px-8">
-        <p className="rs-tagline text-[22px]">Da ideia ao próximo take.</p>
+      <div className="hidden lg:flex h-[72px] shrink-0 items-center gap-2 border-b border-line px-8">
+        <p className="rs-tagline flex-1 text-[30px]">Da ideia ao próximo take.</p>
+        {sino}
+        <div title={`${nome} · ${papel}`}>{avatar}</div>
       </div>
       <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {aba === "chat" && <Chat conversaId={conversaId} setConversaId={setConversaId} />}
