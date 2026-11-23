@@ -1,0 +1,55 @@
+/* Rafa Studio — Brand tokens v1.0 | 23 Nov 2026
+   Namespaced CSS properties: safe to add without replacing business logic. */
+:root {
+  --rs-noir: #120F17;
+  --rs-plum: #211A25;
+  --rs-blush: #E7A9C3;
+  --rs-porcelain: #FBF5F3;
+  --rs-mauve: #A88C9B;
+  --rs-champagne: #C8A979;
+  --rs-bg: #120F17;
+  --rs-surface: #211A25;
+  --rs-surface-raised: #2B2230;
+  --rs-surface-hover: #352A38;
+  --rs-border: #4B3B4B;
+  --rs-text: #FBF5F3;
+  --rs-text-secondary: #D1C3CE;
+  --rs-text-muted: #A995A7;
+  --rs-on-accent: #24121C;
+  --rs-accent: #E7A9C3;
+  --rs-accent-hover: #F0BDD3;
+  --rs-accent-subtle: #3C2837;
+  --rs-success: #76B89A;
+  --rs-warning: #D7B16C;
+  --rs-error: #D98293;
+  --rs-info: #86A6DF;
+  --rs-stage-ideia: #928998;
+  --rs-stage-roteiro: #83A4D8;
+  --rs-stage-aprovado: #B49AD9;
+  --rs-stage-producao: #D69A75;
+  --rs-stage-gravado: #D6BE7C;
+  --rs-stage-editado: #D9A0BB;
+  --rs-stage-publicado: #7FAF91;
+  --rs-evidence-forte: #82B99A;
+  --rs-evidence-media: #CEB37E;
+  --rs-evidence-fraca: #B9A9B6;
+  --rs-evidence-sem: #908493;
+  --rs-radius-sm: 8px;
+  --rs-radius-md: 12px;
+  --rs-radius-lg: 16px;
+  --rs-radius-xl: 22px;
+  --rs-font-editorial: "Instrument Serif", Georgia, serif;
+  --rs-font-ui: Inter, system-ui, sans-serif;
+  --rs-motion-fast: 120ms;
+  --rs-motion-normal: 180ms;
+  --rs-motion-slow: 240ms;
+}
+/* Apply to root of Rafa Studio without overriding existing functional classes. */
+.rs-theme { color-scheme: dark; background:var(--rs-bg); color:var(--rs-text); font-family:var(--rs-font-ui); }
+.rs-editorial {font-family:var(--rs-font-editorial); font-weight:400; line-height:1.08;}
+.rs-card {background:var(--rs-surface);border:1px solid var(--rs-border);border-radius:var(--rs-radius-lg);box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.rs-button-primary {background:var(--rs-accent); color:var(--rs-on-accent); border-radius:var(--rs-radius-md);}
+.rs-button-primary:hover {background:var(--rs-accent-hover);}
+.rs-button-primary:focus-visible,.rs-focus:focus-visible {outline:3px solid var(--rs-champagne);outline-offset:3px;}
+.rs-muted {color:var(--rs-text-secondary);}
+@media (prefers-reduced-motion:reduce){.rs-theme *,.rs-theme *::before,.rs-theme *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}}

@@ -67,7 +67,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
   const lista = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <h2 className="font-display text-lg font-semibold">Conversas</h2>
+        <h2 className="font-display text-[24px] leading-tight">Conversas</h2>
         <Botao variante="suave" tamanho="sm" onClick={() => escolher(null)}><MessageSquarePlus className="size-4" />Nova</Botao>
       </div>
       <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">
@@ -113,7 +113,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
         <header className="flex items-center gap-3 border-b border-line bg-surface/70 px-4 py-3 backdrop-blur md:px-6">
           <Botao variante="fantasma" tamanho="icone" className="md:hidden -ml-2" aria-label="Conversas" onClick={() => setListaAberta(true)}><ChevronLeft className="size-5" /></Botao>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-[17px] font-semibold">{atual?.titulo ?? "Nova conversa"}</h1>
+            <h1 className="truncate font-display text-[22px] leading-tight">{atual?.titulo ?? "Nova conversa"}</h1>
             <p className="text-[12px] text-muted">Command Center · delega para Produção</p>
           </div>
           {estado && <Selo tom={estado.tom} ponto>{estado.nome}</Selo>}
@@ -124,8 +124,8 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
           <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6 md:px-6">
             {!conversaId && (
               <div className="flex flex-col items-center pt-[8vh] text-center">
-                <div className="grid size-14 place-items-center rounded-2xl bg-[#3b2a33] text-[#f5e7ea] dark:bg-[#f0dfe4] dark:text-[#3b2a33]"><Sparkles className="size-6" /></div>
-                <h2 className="mt-4 font-display text-[26px] font-semibold tracking-tight">O que vamos criar hoje?</h2>
+                <div className="grid size-14 place-items-center rounded-2xl bg-brand text-brand-ink"><Sparkles className="size-6" /></div>
+                <h2 className="mt-4 font-display text-[34px] leading-[1.1]">O que vamos criar hoje?</h2>
                 <p className="mt-1.5 max-w-md text-[15px] text-muted">O Command Center registra a tarefa, delega à Produção e traz o resultado para você aprovar.</p>
                 <div className="mt-6 grid w-full max-w-lg gap-2">
                   {SUGESTOES.map((s) => (

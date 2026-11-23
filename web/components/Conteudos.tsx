@@ -26,7 +26,7 @@ export function Modal({ titulo, aberto, fechar, children }: { titulo: string; ab
       <div className="absolute inset-0 bg-black/35 backdrop-blur-[1px]" onClick={fechar} />
       <Cartao className="relative w-full sm:max-w-md rounded-b-none sm:rounded-2xl p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">{titulo}</h2>
+          <h2 className="font-display text-[24px] leading-tight">{titulo}</h2>
           <Botao variante="fantasma" tamanho="icone" aria-label="Fechar" onClick={fechar}><X className="size-4" /></Botao>
         </div>
         {children}
@@ -101,13 +101,13 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-6 pb-4 md:px-8">
         <div>
-          <h1 className="font-display text-[26px] font-semibold tracking-tight">Conteúdos</h1>
-          <p className="mt-0.5 text-[14px] text-muted">Da ideia ao Reel publicado. Arraste os cartões entre as etapas.</p>
+          <h1 className="font-display text-[34px] leading-[1.1]">Conteúdos</h1>
+          <p className="mt-1 text-[14px] text-ink-2">Da ideia ao Reel publicado. Arraste os cartões entre as etapas.</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-xl bg-surface-2 p-0.5">
-            <button onClick={() => setLixeira(false)} className={cn("rounded-[10px] px-3 py-1.5 text-[13px] font-medium cursor-pointer", !lixeira ? "bg-surface shadow-sm" : "text-muted")}>Quadro</button>
-            <button onClick={() => setLixeira(true)} className={cn("inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[13px] font-medium cursor-pointer", lixeira ? "bg-surface shadow-sm" : "text-muted")}>
+            <button onClick={() => setLixeira(false)} className={cn("rounded-[10px] px-3 py-1.5 text-[13px] font-medium cursor-pointer", !lixeira ? "bg-surface-3 text-ink shadow-sm" : "text-ink-2")}>Quadro</button>
+            <button onClick={() => setLixeira(true)} className={cn("inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[13px] font-medium cursor-pointer", lixeira ? "bg-surface-3 text-ink shadow-sm" : "text-ink-2")}>
               <Trash2 className="size-3.5" />Lixeira{arquivados.length > 0 && <span className="text-muted">({arquivados.length})</span>}
             </button>
           </div>
@@ -149,13 +149,13 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
                     const c = conteudos.find((x) => x.serie === ev.dataTransfer.getData("text/plain"));
                     if (c && c.etapa !== e.id) mover(c, e.id, { ordem: Date.now() / 1000 });
                   }}
-                  className={cn("flex h-full w-[264px] min-w-[240px] shrink-0 snap-start flex-col rounded-2xl p-2.5 transition etapa-borda", e.cor,
-                    alvo === e.id && arrastando ? "bg-brand-soft ring-2 ring-brand/30" : "bg-surface-2/60")}
+                  className={cn("flex h-full w-[264px] min-w-[240px] shrink-0 snap-start flex-col rounded-2xl border p-2 transition-colors", e.cor,
+                    alvo === e.id && arrastando ? "border-brand/50 bg-brand-soft" : "border-line/60 bg-surface/60")}
                 >
-                  <div className="flex items-center gap-2 px-1.5 pb-2.5 pt-1">
+                  <div className={cn("mb-2 flex items-center gap-2 rounded-xl border px-3 py-2 etapa-suave", e.cor)}>
                     <span className={cn("size-2 rounded-full etapa-ponto", e.cor)} />
                     <span className="text-[13px] font-semibold">{e.nome}</span>
-                    <span className="ml-auto text-[12px] text-muted tabular-nums">{itens.length}</span>
+                    <span className="ml-auto text-[12px] font-medium tabular-nums">{itens.length}</span>
                   </div>
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2">
                     {carregando && <Esqueleto className="h-20" />}
@@ -201,17 +201,17 @@ function CartaoConteudo({ c, versoes, metricas, anexos, padrao, abrir, mover, ar
       onDragEnd={onDragEnd}
       className={cn("group relative cursor-grab active:cursor-grabbing", fantasma && "opacity-40")}
     >
-      <Cartao className="p-3 space-y-2 hover:border-brand/30 transition">
+      <Cartao className="p-3 space-y-2 bg-surface-2 shadow-none hover:border-brand/40 transition-colors">
         <div className="flex items-center gap-1.5">
           <Selo tom="neutro">Reel</Selo>
           {versoes.length > 0 && <span className="text-[11px] text-muted">v{ult?.versao}</span>}
           {c.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
           {anexos > 0 && <span title={`${anexos} anexo(s)`} className="inline-flex items-center gap-0.5 text-[11px] text-muted"><Paperclip className="size-3" />{anexos}</span>}
-          <button onClick={(e) => { e.stopPropagation(); setMenu(!menu); }} aria-label="Ações" className="ml-auto grid size-7 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink cursor-pointer">
+          <button onClick={(e) => { e.stopPropagation(); setMenu(!menu); }} aria-label="Ações" className="ml-auto grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-3 hover:text-ink cursor-pointer">
             <MoreHorizontal className="size-4" />
           </button>
         </div>
-        <button onClick={abrir} className="block w-full text-left text-[14px] font-medium leading-snug cursor-pointer hover:text-brand">{nomeConteudo(c)}</button>
+        <button onClick={abrir} className="block w-full text-left text-[14px] font-medium leading-snug text-ink cursor-pointer hover:text-brand">{nomeConteudo(c)}</button>
         {!c.etiquetas?.includes("teste") && <SeloEvidencia padrao={padrao} />}
         <div className="flex items-center gap-2 text-[11px] text-muted">
           {ult && <><Avatar nome={ult.autor} tipo={/produ/i.test(ult.autor) ? "agente" : "humano"} tamanho={18} /><span className="truncate">{ult.autor}</span><span>·</span></>}
@@ -353,7 +353,7 @@ function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVolt
                     <Paperclip className="size-3.5" />Anexo de {nomeConteudo(pai)}
                   </button>
                 )}
-                <h1 className="mt-2 font-display text-[28px] leading-tight font-semibold tracking-tight">{nomeConteudo(c)}</h1>
+                <h1 className="mt-2 font-display text-[36px] leading-[1.08]">{nomeConteudo(c)}</h1>
               </div>
             )}
             {erro && <Aviso className="mb-4">{erro}</Aviso>}
@@ -545,8 +545,8 @@ export function Biblioteca() {
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-[1000px] px-4 pb-10 md:px-8">
         <div className="pt-6 pb-4">
-          <h1 className="font-display text-[26px] font-semibold tracking-tight">Biblioteca</h1>
-          <p className="mt-0.5 text-[14px] text-muted">Pautas, pesquisas, relatórios e fichas de apoio. O que é peça de conteúdo fica no quadro.</p>
+          <h1 className="font-display text-[34px] leading-[1.1]">Biblioteca</h1>
+          <p className="mt-1 text-[14px] text-ink-2">Pautas, pesquisas, relatórios e fichas de apoio. O que é peça de conteúdo fica no quadro.</p>
         </div>
         {erro && <Aviso className="mb-3">{erro}</Aviso>}
         <div className="mb-4 flex flex-wrap items-center gap-2">

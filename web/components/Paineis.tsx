@@ -13,8 +13,8 @@ function Cabecalho({ titulo, sub, children }: { titulo: string; sub?: string; ch
   return (
     <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-6 pb-4 md:px-8">
       <div>
-        <h1 className="font-display text-[26px] font-semibold tracking-tight">{titulo}</h1>
-        {sub && <p className="mt-0.5 text-[14px] text-muted">{sub}</p>}
+        <h1 className="font-display text-[34px] leading-[1.1]">{titulo}</h1>
+        {sub && <p className="mt-1 text-[14px] text-ink-2">{sub}</p>}
       </div>
       {children}
     </div>
@@ -115,7 +115,7 @@ export function Resultados({ abrirId }: { abrirId?: string | null }) {
     <div className="flex h-full">
       <aside className={cn("w-full md:w-[320px] shrink-0 flex-col border-r border-line bg-surface/60", leitura ? "hidden md:flex" : "flex")}>
         <div className="px-4 pt-6 pb-3">
-          <h1 className="font-display text-[22px] font-semibold tracking-tight">Resultados</h1>
+          <h1 className="font-display text-[28px] leading-[1.1]">Resultados</h1>
           <p className="text-[13px] text-muted">{series.length} documento{series.length === 1 ? "" : "s"}</p>
         </div>
         <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-4">

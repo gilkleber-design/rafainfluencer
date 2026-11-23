@@ -5,13 +5,13 @@ import type { Tom } from "@/components/ui";
 
 /** Quem fala: cor e ícone fixos por agente, para reconhecer de relance. */
 const AGENTES: Record<string, { cor: string; icone: React.ElementType; papel: string }> = {
-  "command center": { cor: "bg-[#3b2a33] text-[#f5e7ea] dark:bg-[#f0dfe4] dark:text-[#3b2a33]", icone: Sparkles, papel: "Coordena e delega" },
-  "produção": { cor: "bg-[#a07a3c] text-white", icone: Clapperboard, papel: "Roteiros e pautas" },
+  "command center": { cor: "bg-brand text-brand-ink", icone: Sparkles, papel: "Coordena e delega" },
+  "produção": { cor: "bg-gold text-brand-ink", icone: Clapperboard, papel: "Roteiros e pautas" },
 };
 
 export function infoAgente(nome: string | null | undefined) {
   const chave = (nome ?? "").toLowerCase().trim();
-  return AGENTES[chave] ?? { cor: "bg-info text-white dark:text-[#151113]", icone: Bot, papel: "Agente" };
+  return AGENTES[chave] ?? { cor: "bg-info text-brand-ink", icone: Bot, papel: "Agente" };
 }
 
 export function Avatar({ nome, tipo, tamanho = 32 }: { nome: string | null; tipo: "humano" | "command_center" | "agente" | "sistema"; tamanho?: number }) {

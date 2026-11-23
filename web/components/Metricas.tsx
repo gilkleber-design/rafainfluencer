@@ -31,8 +31,8 @@ export function Metricas({ abrir }: { abrir: (serie: string) => void }) {
       <div className="mx-auto max-w-[1000px] px-4 pb-10 md:px-8">
         <div className="flex flex-wrap items-end justify-between gap-3 pt-6 pb-4">
           <div>
-            <h1 className="font-display text-[26px] font-semibold tracking-tight">Métricas</h1>
-            <p className="mt-0.5 text-[14px] text-muted">Desempenho dos Reels publicados.</p>
+            <h1 className="font-display text-[34px] leading-[1.1]">Métricas</h1>
+            <p className="mt-1 text-[14px] text-ink-2">Desempenho dos Reels publicados.</p>
           </div>
           <Botao tamanho="sm" disabled={!!ocupado || !publicados.some((c) => c.url_publicacao)} onClick={() => atualizar(publicados.filter((c) => c.url_publicacao).map((c) => c.serie))}>
             <RefreshCw className={cn("size-3.5", ocupado && "animate-spin")} />Atualizar todos
