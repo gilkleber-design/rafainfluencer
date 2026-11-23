@@ -20,20 +20,15 @@ ${REGRAS_COMUNS}
 
 Infraestrutura de gravação: home studio com iPhone 16 Pro, OBSBOT Tiny 2, microfone Hollyland Lark M2, softboxes, bastões LED e cenário principal de prateleiras com luz indireta quente. Prefira setups fixos e simples.
 
-Todo roteiro entregue tem, em markdown, nesta ordem:
-1. Objetivo e público
-2. Gancho inicial (primeiros 3 segundos)
-3. Roteiro de fala natural (falas curtas, sem texto decorado)
-4. Estrutura narrativa
-5. Lista de tomadas
-6. Produtos necessários
-7. Direção de cena
-8. Iluminação e áudio
-9. Orientação de edição
-10. Legenda e chamada para ação (identifique publi ou afiliado quando houver)
+Quem lê o roteiro é a Rafa, no celular, num relance. Escreva para ela em linguagem simples, sem jargão técnico, sem códigos de tarefa, ids, nomes de threads, fontes ou de onde a ideia veio. Formato, em markdown, nesta ordem:
+1. \`# Título\` curto e claro.
+2. Logo abaixo, linhas curtas em negrito: **Duração**, **Produtos** (nome completo de cada um), **Onde gravar** e **Antes de começar** (o que deixar pronto, incluindo câmera sem filtro).
+3. \`## Passo a passo\`: uma seção \`### N. Nome curto (tempo)\` por cena, só com estas linhas, quando houver: **Faça:** (ação e enquadramento em palavras do dia a dia), **Fale:** «fala sugerida», **Na tela:** (texto que aparece no vídeo), **Dica:** (uma linha, opcional).
+4. \`## Para o Gil\`: tudo o que é técnico ou de bastidor: objetivo e público, estrutura, lista de tomadas, iluminação e áudio, ajustes da câmera, orientação de edição, legenda, chamada para ação, hashtags, publi ou afiliado, checagem das regras, hipóteses e pendências. O painel deixa esta parte recolhida.
+Nada que a Rafa precise para gravar pode ficar só em "Para o Gil". Pautas seguem o mesmo formato.
 
 Como entregar:
-- Numa revisão, leia antes a versão anterior com \`ler_resultado\` e altere só o que foi pedido. Se a versão anterior tiver falas com aspas normais, passe essas falas para « ».
+- Numa revisão, leia antes a versão anterior com \`ler_resultado\` e altere só o que foi pedido. Se a versão anterior não estiver no formato acima (falas em « » e bloco "Para o Gil"), reescreva nesse formato sem mudar o conteúdo.
 - Salve o material com a ferramenta \`entregar_resultado\`. Numa revisão, passe \`substitui_resultado_id\` com o id da versão anterior, para virar a versão seguinte.
 - Depois responda ao Command Center em uma ou duas linhas: o id do resultado e a versão. Não repita o roteiro inteiro na resposta.
 `.trim();

@@ -151,3 +151,26 @@
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='2' width='6' height='12' rx='3'/%3E%3Cpath d='M19 10v1a7 7 0 0 1-14 0v-1M12 18v4'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .md-invertido .fala { color: var(--brand-ink); background: rgb(255 255 255 / .15); border-left-color: var(--brand-ink); }
+
+/* Roteiro para a Rafa: passos com respiro e bloco técnico recolhido. */
+.md h3 { margin-top: 1.6em; }
+.md details.para-gil {
+  margin-top: 2.5em;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.md details.para-gil > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: .8em 1em;
+  font-size: .9em;
+  font-weight: 600;
+  color: var(--muted);
+}
+.md details.para-gil > summary::-webkit-details-marker { display: none; }
+.md details.para-gil > summary::before { content: "▸"; display: inline-block; margin-right: .5em; transition: transform .15s; }
+.md details.para-gil[open] > summary::before { transform: rotate(90deg); }
+.md .para-gil-corpo { padding: 0 1.1em 1em; font-size: .94em; }
+.md .para-gil-corpo > :first-child { margin-top: 0; }
+.md blockquote p::before, .md blockquote p::after { content: none; }
