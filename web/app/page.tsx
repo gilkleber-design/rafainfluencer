@@ -25,7 +25,7 @@ function SemConfiguracao({ faltam }: { faltam: string[] }) {
   return (
     <main className="grid min-h-dvh place-items-center bg-bg p-6">
       <div role="alert" className="w-full max-w-md space-y-4">
-        <Marca variante="empilhada" className="-ml-3 w-[150px]" />
+        <Marca className="w-[128px]" />
         <h1 className="font-display text-[32px] leading-tight">Configuração incompleta</h1>
         <p className="text-[15px] text-ink-2">Este endereço foi publicado sem as variáveis de ambiente do Supabase, então o painel não consegue se conectar.</p>
         <ul className="space-y-1 rounded-xl border border-line bg-surface p-3.5 font-mono text-[13px] text-ink">{faltam.map((v) => <li key={v}>{v}</li>)}</ul>
@@ -50,15 +50,14 @@ function Painel() {
   return <Studio email={sessao.user.email ?? ""} />;
 }
 
-/** Logotipo oficial (SVG em paths, variante para fundo escuro). */
-function Marca({ variante = "horizontal", className }: { variante?: "horizontal" | "empilhada" | "monograma"; className?: string }) {
-  const arq = { horizontal: ["rafa-studio-horizontal-dark.svg", 735, 184], empilhada: ["rafa-studio-stacked-dark.svg", 540, 285], monograma: ["rafa-studio-monogram-dark.svg", 256, 256] }[variante];
+/** Logotipo único do Rafa Studio (o mesmo da landing): "rafa." em cima, "STUDIO" embaixo. */
+function Marca({ className }: { className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={`/marca/${arq[0]}`} width={arq[1] as number} height={arq[2] as number} alt="Rafa Studio" className={cn("block h-auto select-none", className)} draggable={false} />;
+  return <img src="/marca/rafa-logo.svg" width={345} height={232} alt="Rafa Studio" className={cn("block h-auto select-none", className)} draggable={false} />;
 }
 
 function Carregando() {
-  return <main className="grid min-h-dvh place-items-center bg-bg"><Marca variante="monograma" className="w-20 animate-pulse motion-reduce:animate-none" /></main>;
+  return <main className="grid min-h-dvh place-items-center bg-bg"><Marca className="w-28 animate-pulse motion-reduce:animate-none" /></main>;
 }
 
 function Login() {
@@ -83,7 +82,7 @@ function Login() {
   return (
     <main className="grid min-h-dvh bg-bg lg:grid-cols-[1.1fr_1fr]">
       <section className="relative hidden lg:flex flex-col justify-between overflow-hidden border-r border-line bg-[radial-gradient(120%_80%_at_85%_0%,var(--rs-plum)_0%,var(--rs-noir)_60%)] p-12">
-        <Marca variante="empilhada" className="-ml-4 w-[200px]" />
+        <Marca className="w-[176px]" />
         <div className="max-w-md">
           <p className="rs-tagline text-[56px] leading-[1.05]">Da ideia ao próximo take.</p>
           <p className="mt-5 text-[15px] leading-relaxed text-ink-2">Converse com o Command Center, acompanhe o trabalho dos agentes e aprove cada versão sem sair do painel.</p>
@@ -93,7 +92,7 @@ function Login() {
 
       <section className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <Marca variante="empilhada" className="mb-8 -ml-3 w-[168px] lg:hidden" />
+          <Marca className="mb-8 w-[140px] lg:hidden" />
           {enviado ? (
             <div className="space-y-3">
               <div className="grid size-12 place-items-center rounded-2xl bg-ok-soft text-ok"><Mail className="size-5" /></div>
@@ -161,7 +160,7 @@ function Studio({ email }: { email: string }) {
     <div className="flex h-dvh flex-col lg:flex-row">
       {/* Barra lateral (desktop) */}
       <aside className="hidden lg:flex w-[252px] shrink-0 flex-col border-r border-line bg-surface px-4 py-5">
-        <Marca variante="empilhada" className="w-[150px]" />
+        <Marca className="w-[128px]" />
         <div className="mx-3 mt-3 h-px bg-line" />
         <nav aria-label="Navegação principal" className="mt-5 space-y-1">
           {ABAS.map(({ id, nome, icone: Icone }) => (
@@ -171,7 +170,7 @@ function Studio({ email }: { email: string }) {
               aria-current={aba === id ? "page" : undefined}
               className={cn(
                 "relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-colors duration-150 cursor-pointer",
-                aba === id ? "bg-[color-mix(in_srgb,var(--rs-mauve)_30%,var(--rs-plum))] text-ink before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full before:bg-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                aba === id ? "bg-[#60424D] text-ink before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full before:bg-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
               )}
             >
               <Icone className={cn("size-[18px]", aba === id && "text-brand")} />
@@ -192,7 +191,7 @@ function Studio({ email }: { email: string }) {
 
       {/* Topo (celular) */}
       <header className="lg:hidden flex items-center justify-between border-b border-line bg-surface px-4 py-2 pt-[max(.5rem,env(safe-area-inset-top))]">
-        <Marca className="h-9 w-auto -ml-1.5" />
+        <Marca className="h-11 w-auto" />
         <div className="flex items-center">
           {sino}
           <Botao variante="fantasma" tamanho="icone" className="size-11" aria-label="Sair" onClick={sair}><LogOut className="size-4" /></Botao>

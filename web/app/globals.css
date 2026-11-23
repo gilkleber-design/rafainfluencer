@@ -163,23 +163,25 @@
 .md .para-gil-corpo > :first-child { margin-top: 0; }
 .md blockquote p::before, .md blockquote p::after { content: none; }
 
-/* Cores das etapas do quadro (tokens --rs-stage-*). Só visual: não altera os valores do banco. */
-.etapa-ideia { --etapa: var(--rs-stage-ideia); }
-.etapa-roteiro { --etapa: var(--rs-stage-roteiro); }
-.etapa-aprovado { --etapa: var(--rs-stage-aprovado); }
-.etapa-em_producao { --etapa: var(--rs-stage-producao); }
-.etapa-gravado { --etapa: var(--rs-stage-gravado); }
-.etapa-editado { --etapa: var(--rs-stage-editado); }
-.etapa-publicado { --etapa: var(--rs-stage-publicado); }
+/* Cores das etapas do quadro. Só visual: não altera os valores do banco. */
+.etapa-ideia { --etapa-solida: #725A70; }
+.etapa-roteiro { --etapa-solida: #73505C; }
+.etapa-aprovado { --etapa-solida: #8A6B4E; }
+.etapa-em_producao { --etapa-solida: #7A5456; }
+.etapa-gravado { --etapa-solida: #734F61; }
+.etapa-editado { --etapa-solida: #745A71; }
+.etapa-publicado { --etapa-solida: #6D725A; }
+/* Paleta do mockup aprovado (23/11): faixa sólida em tom pastel; ponto e texto usam a versão clara. */
+.etapa-ideia, .etapa-roteiro, .etapa-aprovado, .etapa-em_producao, .etapa-gravado, .etapa-editado, .etapa-publicado { --etapa: color-mix(in srgb, var(--etapa-solida) 55%, var(--rs-porcelain)); }
 .etapa-ponto { background: var(--etapa); }
 .etapa-suave { background: color-mix(in srgb, var(--etapa) 15%, var(--rs-surface)); color: color-mix(in srgb, var(--etapa) 80%, var(--rs-text)); border-color: color-mix(in srgb, var(--etapa) 55%, transparent); }
-.etapa-faixa { background: color-mix(in srgb, var(--etapa) 50%, var(--rs-plum)); color: var(--rs-porcelain); }
+.etapa-faixa { background: var(--etapa-solida); color: var(--rs-porcelain); }
 .etapa-borda { border-top: 3px solid var(--etapa); }
 
 /* Selo de evidência do Radar */
 .evid { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 0 8px; font-size: 11px; font-weight: 600; line-height: 20px; white-space: nowrap; }
-.evid-forte { --evid: var(--rs-evidence-forte); }
-.evid-media { --evid: var(--rs-evidence-media); }
+.evid-forte { --evid: #8A9A70; }
+.evid-media { --evid: #D8AB81; }
 .evid-fraca { --evid: var(--rs-evidence-fraca); }
 .evid-sem { --evid: var(--rs-evidence-sem); }
 .evid { color: color-mix(in srgb, var(--evid) 80%, var(--rs-text)); background: color-mix(in srgb, var(--evid) 15%, var(--rs-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--evid) 35%, transparent); }
