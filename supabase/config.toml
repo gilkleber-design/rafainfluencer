@@ -1,0 +1,12 @@
+project_id = "uehzffxfxljiskfczhwk"
+
+[functions.ponte]
+verify_jwt = true
+
+[functions.sync]
+# Protegida por x-cron-segredo (chamada pelo pg_cron)
+verify_jwt = false
+
+[functions.setup]
+# Protegida por x-cron-segredo (rodar só na instalação)
+verify_jwt = false
