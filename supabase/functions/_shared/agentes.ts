@@ -26,6 +26,7 @@ Quem lê o roteiro é a Rafa, no celular, num relance. Escreva para ela em lingu
 3. \`## Passo a passo\`: uma seção \`### N. Nome curto (tempo)\` por cena, só com estas linhas, quando houver: **Faça:** (ação e enquadramento em palavras do dia a dia), **Fale:** «fala sugerida», **Na tela:** (texto que aparece no vídeo), **Dica:** (uma linha, opcional).
 4. \`## Para o Gil\`: tudo o que é técnico ou de bastidor: objetivo e público, estrutura, lista de tomadas, iluminação e áudio, ajustes da câmera, orientação de edição, legenda, chamada para ação, hashtags, publi ou afiliado, checagem das regras, hipóteses e pendências. O painel deixa esta parte recolhida.
 Nada que a Rafa precise para gravar pode ficar só em "Para o Gil". Pautas seguem o mesmo formato.
+Título (campo titulo do entregar_resultado): em roteiro e pauta de Reel, "Formato · Tema curto" (ex.: "Vale o preço? · Batom Victoria", "Prova da rotina · Blush de R$ 19,99"). Não coloque código EP, data, versão nem a palavra roteiro: o painel numera sozinho (EP001, EP002…). Em pesquisa e relatório, só o assunto curto (ex.: "Radar Beauty padrões criativos"); o painel acrescenta o tipo e a data. Numa revisão, mantenha o título da versão anterior.
 
 Como entregar:
 - Numa revisão, leia antes a versão anterior com \`ler_resultado\` e altere só o que foi pedido. Se a versão anterior não estiver no formato acima (falas em « » e bloco "Para o Gil"), reescreva nesse formato sem mudar o conteúdo.
@@ -39,7 +40,7 @@ ${REGRAS_COMUNS}
 
 Como trabalhar:
 - Responda de forma direta. Perguntas simples você responde sozinho, sem delegar.
-- Para cada trabalho de produção (roteiro, pauta, revisão de roteiro), registre uma tarefa com \`registrar_tarefa\` e delegue ao agente "Produção" com um briefing completo: objetivo, formato, duração, produtos, restrições e, em revisões, o id do resultado anterior e o pedido de alteração exato. O agente de Produção não vê esta conversa; tudo que ele precisa vai no briefing.
+- Para cada trabalho de produção (roteiro, pauta, revisão de roteiro), registre uma tarefa com \`registrar_tarefa\` (título no padrão "EP### · Formato · Tema" quando for revisão de um conteúdo já numerado) e delegue ao agente "Produção" com um briefing completo: objetivo, formato, duração, produtos, restrições e, em revisões, o id do resultado anterior e o pedido de alteração exato. O agente de Produção não vê esta conversa; tudo que ele precisa vai no briefing.
 - Quando a Produção entregar, leia o texto salvo com \`ler_resultado\` e confira contra o pedido. Não peça à Produção para colar o roteiro na resposta. Então marque a tarefa como \`aguardando_aprovacao\` com \`atualizar_tarefa\` e abra um pedido de aprovação com \`pedir_aprovacao\` apontando o resultado.
 - Mensagens que começam com "[Aprovação" são decisões do painel. "alteração pedida": registre nova tarefa de revisão e delegue à Produção com o comentário; "aprovado": marque a tarefa como concluída e confirme em uma linha.
 - Use \`consultar_instagram\` só para dados públicos de perfis (leitura). Ela não publica nada.
@@ -57,7 +58,7 @@ export const FERRAMENTA_ENTREGAR = {
   name: "entregar_resultado",
   description: "Salva um entregável (roteiro, pauta, relatório) no painel do Rafa Studio. Para uma revisão, informe substitui_resultado_id para criar a próxima versão. Retorna o id e a versão salvos.",
   input_schema: objeto({
-    titulo: { type: "string", description: "Título curto do entregável" },
+    titulo: { type: "string", description: "Reel: \"Formato · Tema curto\", sem código EP nem data (o painel numera). Pesquisa/relatório: só o assunto curto." },
     tipo: { type: "string", enum: ["roteiro", "pauta", "pesquisa", "relatorio", "outro"] },
     conteudo: { type: "string", description: "Conteúdo completo em markdown" },
     codigo_tarefa: { type: "string", description: "Código da tarefa (T-0001), se houver" },

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { BarChart3, ExternalLink, Info, RefreshCw } from "lucide-react";
 import { ponte } from "@/lib/supabase";
 import { Aviso, Botao, Cartao, Esqueleto, Vazio } from "@/components/ui";
-import { num, quando } from "@/components/identidade";
+import { nomeConteudo, num, quando } from "@/components/identidade";
 import { Grafico, useDados } from "@/components/Conteudos";
 import { cn } from "@/lib/cn";
 
@@ -73,7 +73,7 @@ export function Metricas({ abrir }: { abrir: (serie: string) => void }) {
             return (
               <Cartao key={c.serie} className="grid gap-4 p-4 md:grid-cols-[1fr_280px] md:items-center">
                 <div className="min-w-0">
-                  <button onClick={() => abrir(c.serie)} className="text-left text-[15px] font-medium hover:text-brand cursor-pointer">{c.titulo}</button>
+                  <button onClick={() => abrir(c.serie)} className="text-left text-[15px] font-medium hover:text-brand cursor-pointer">{nomeConteudo(c)}</button>
                   <p className="text-[12px] text-muted">
                     {c.publicado_em ? `Publicado ${quando(c.publicado_em)}` : "Publicado"}
                     {c.url_publicacao && <> · <a href={c.url_publicacao} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-brand">ver Reel<ExternalLink className="size-3" /></a></>}

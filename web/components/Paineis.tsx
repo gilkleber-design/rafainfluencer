@@ -4,9 +4,9 @@ import { Check, CheckCheck, ChevronLeft, Copy, ExternalLink, FileText, KanbanSqu
 import Md from "@/components/Md";
 import { ponte } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
-import type { Aprovacao, Resultado, Tarefa } from "@/lib/tipos";
+import type { Aprovacao, Conteudo, Resultado, Tarefa } from "@/lib/tipos";
 import { Aviso, Botao, CampoTexto, Cartao, Esqueleto, Selo, Vazio } from "@/components/ui";
-import { Avatar, ESTADO_TAREFA, TIPO_RESULTADO, quando } from "@/components/identidade";
+import { Avatar, ESTADO_TAREFA, TIPO_RESULTADO, nomeConteudo, quando } from "@/components/identidade";
 import { cn } from "@/lib/cn";
 
 function Cabecalho({ titulo, sub, children }: { titulo: string; sub?: string; children?: React.ReactNode }) {
@@ -198,6 +198,8 @@ export function Aprovacoes({ verResultado }: { verResultado: (id: string) => voi
   const pendentes = linhas.filter((a) => a.estado === "pendente");
   const decididas = linhas.filter((a) => a.estado !== "pendente").slice(0, 20);
   const res = (id: string | null) => resultados.find((r) => r.id === id);
+  const { linhas: conteudos } = useTabela<Conteudo>("conteudos", { ordem: "ordem", limite: 500 });
+  const nome = (r: Resultado) => { const c = conteudos.find((x) => x.serie === r.serie); return c ? nomeConteudo(c) : r.titulo; };
 
   async function decidir(a: Aprovacao, estado: "aprovado" | "alteracao_pedida") {
     setOcupado(a.id);
@@ -232,7 +234,7 @@ export function Aprovacoes({ verResultado }: { verResultado: (id: string) => voi
                       <span className="text-[12px] text-muted">{quando(a.criado_em)}</span>
                     </div>
                     <h2 className="mt-1.5 text-[17px] font-semibold leading-snug">{a.pergunta}</h2>
-                    {r && <p className="mt-0.5 text-[13px] text-muted">{TIPO_RESULTADO[r.tipo] ?? r.tipo} · {r.titulo} · v{r.versao} · por {r.autor}</p>}
+                    {r && <p className="mt-0.5 text-[13px] text-muted">{nome(r)} · v{r.versao} · por {r.autor}</p>}
                   </div>
                 </div>
 

@@ -73,3 +73,16 @@ export const ETAPAS: { id: import("@/lib/tipos").Etapa; nome: string; cor: strin
 ];
 export const nomeEtapa = (id: string) => ETAPAS.find((e) => e.id === id)?.nome ?? (id === "arquivado" ? "Lixeira" : id);
 export const num = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleString("pt-BR"));
+
+/**
+ * Nome padrão de um conteúdo:
+ * peça "EP001 · Formato · Tema", teste "TESTE · Tema", documento "Tipo · Assunto · dd/mm".
+ */
+export function nomeConteudo(c: { titulo: string; codigo?: string | null; classe?: string; etiquetas?: string[]; tipo: string; criado_em: string }) {
+  if (c.classe === "documento") {
+    const data = new Date(c.criado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    return `${TIPO_RESULTADO[c.tipo] ?? "Documento"} · ${c.titulo} · ${data}`;
+  }
+  if (c.etiquetas?.includes("teste")) return `TESTE · ${c.titulo}`;
+  return c.codigo ? `${c.codigo} · ${c.titulo}` : c.titulo;
+}

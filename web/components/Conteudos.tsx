@@ -9,7 +9,7 @@ import { ponte } from "@/lib/supabase";
 import { useTabela } from "@/lib/useTabela";
 import type { Conteudo, Etapa, Historico, Metrica, Resultado } from "@/lib/tipos";
 import { Aviso, Botao, CampoTexto, Cartao, Esqueleto, Selo, Vazio } from "@/components/ui";
-import { Avatar, ETAPAS, TIPO_RESULTADO, nomeEtapa, num, quando } from "@/components/identidade";
+import { Avatar, ETAPAS, TIPO_RESULTADO, nomeConteudo, nomeEtapa, num, quando } from "@/components/identidade";
 import { cn } from "@/lib/cn";
 
 /* ------------------------------------------------------------------ modal */
@@ -123,7 +123,7 @@ export function Conteudos({ abrirResultado, abrirSerie }: { abrirResultado?: str
               {arquivados.map((c) => (
                 <div key={c.serie} className="flex items-center gap-3 px-5 py-3.5">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium">{c.titulo}</p>
+                    <p className="truncate text-[14px] font-medium">{nomeConteudo(c)}</p>
                     <p className="text-[12px] text-muted">Estava em {nomeEtapa(c.etapa)} · arquivado por {c.arquivado_por ?? "—"} {c.arquivado_em && quando(c.arquivado_em)}</p>
                   </div>
                   <Botao tamanho="sm" onClick={() => chamar({ acao: "conteudo_restaurar", serie: c.serie }, setErro)}><ArchiveRestore className="size-3.5" />Restaurar</Botao>
@@ -208,7 +208,7 @@ function CartaoConteudo({ c, versoes, metricas, anexos, abrir, mover, arquivar, 
             <MoreHorizontal className="size-4" />
           </button>
         </div>
-        <button onClick={abrir} className="block w-full text-left text-[14px] font-medium leading-snug cursor-pointer hover:text-brand">{c.titulo}</button>
+        <button onClick={abrir} className="block w-full text-left text-[14px] font-medium leading-snug cursor-pointer hover:text-brand">{nomeConteudo(c)}</button>
         <div className="flex items-center gap-2 text-[11px] text-muted">
           {ult && <><Avatar nome={ult.autor} tipo={/produ/i.test(ult.autor) ? "agente" : "humano"} tamanho={18} /><span className="truncate">{ult.autor}</span><span>·</span></>}
           <span className="whitespace-nowrap">{quando(c.atualizado_em)}</span>
@@ -342,10 +342,10 @@ function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVolt
                 </div>
                 {pai && (
                   <button onClick={() => abrir(pai.serie)} className="mt-2 inline-flex items-center gap-1 text-[13px] text-brand hover:underline cursor-pointer">
-                    <Paperclip className="size-3.5" />Anexo de {pai.titulo}
+                    <Paperclip className="size-3.5" />Anexo de {nomeConteudo(pai)}
                   </button>
                 )}
-                <h1 className="mt-2 font-display text-[28px] leading-tight font-semibold tracking-tight">{c.titulo}</h1>
+                <h1 className="mt-2 font-display text-[28px] leading-tight font-semibold tracking-tight">{nomeConteudo(c)}</h1>
               </div>
             )}
             {erro && <Aviso className="mb-4">{erro}</Aviso>}
@@ -406,7 +406,7 @@ function Detalhe({ c, todos, versoes, metricas, voltar, abrir, mover, rotuloVolt
                   {anexos.map((a) => (
                     <li key={a.serie}>
                       <button onClick={() => abrir(a.serie)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-surface-2 cursor-pointer">
-                        <FileText className="size-3.5 shrink-0 text-muted" /><span className="min-w-0 flex-1 truncate">{a.titulo}</span>
+                        <FileText className="size-3.5 shrink-0 text-muted" /><span className="min-w-0 flex-1 truncate">{nomeConteudo(a)}</span>
                       </button>
                     </li>
                   ))}
@@ -476,7 +476,7 @@ function Organizar({ c, pecas, setErro }: { c: Conteudo; pecas: Conteudo[]; setE
           <select value={c.anexo_de ?? ""} onChange={(e) => chamar({ acao: "conteudo_anexar", serie: c.serie, anexo_de: e.target.value || null }, setErro)}
             className={cn(campo, "h-9 text-[13px]")}>
             <option value="">Nenhum (item solto)</option>
-            {pecas.map((p) => <option key={p.serie} value={p.serie}>{p.titulo}</option>)}
+            {pecas.map((p) => <option key={p.serie} value={p.serie}>{nomeConteudo(p)}</option>)}
           </select>
         </label>
       </div>
@@ -504,7 +504,7 @@ export function Biblioteca() {
   const docs = conteudos.filter((c) => c.classe === "documento" && !c.arquivado_em)
     .sort((a, b) => b.atualizado_em.localeCompare(a.atualizado_em));
   const contagem = (t: string) => docs.filter((d) => !t || d.tipo === t).length;
-  const lista = docs.filter((d) => (!tipo || d.tipo === tipo) && (!busca || d.titulo.toLowerCase().includes(busca.toLowerCase())));
+  const lista = docs.filter((d) => (!tipo || d.tipo === tipo) && (!busca || nomeConteudo(d).toLowerCase().includes(busca.toLowerCase())));
 
   async function mover(c: Conteudo, etapa: Etapa, extra: Record<string, unknown> = {}) {
     await chamar({ acao: "conteudo_mover", serie: c.serie, etapa, ...extra }, setErro);
@@ -546,11 +546,11 @@ export function Biblioteca() {
                 <button key={d.serie} onClick={() => setAberto(d.serie)} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-surface-2/60 cursor-pointer md:px-5">
                   <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-muted"><FileText className="size-4" /></div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium">{d.titulo}</p>
+                    <p className="truncate text-[14px] font-medium">{nomeConteudo(d)}</p>
                     <p className="truncate text-[12px] text-muted">
                       {TIPO_RESULTADO[d.tipo] ?? d.tipo}{ult && ` · v${ult.versao} · ${ult.autor}`} · {quando(d.atualizado_em)}
                     </p>
-                    {pai && <p className="truncate text-[12px] text-brand"><Paperclip className="inline size-3" /> Anexo de {pai.titulo}</p>}
+                    {pai && <p className="truncate text-[12px] text-brand"><Paperclip className="inline size-3" /> Anexo de {nomeConteudo(pai)}</p>}
                   </div>
                   {d.etiquetas?.map((t) => <Etiqueta key={t} nome={t} />)}
                 </button>
