@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { BarChart3, Bell, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare, Wallet } from "lucide-react";
+import { BarChart3, Bell, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare } from "lucide-react";
 import { supabase, variaveisFaltando } from "@/lib/supabase";
 import Chat from "@/components/Chat";
 import { Aprovacoes, Tarefas } from "@/components/Paineis";
@@ -200,8 +200,8 @@ function Studio({ email }: { email: string }) {
             </button>
           ))}
         </nav>
-        {gestor && <div className="mt-auto pb-3"><SaldoAnthropic /></div>}
-        <div className={cn("flex items-center gap-2.5 border-t border-line px-1 pt-4", !gestor && "mt-auto")}>
+        <div className="mt-auto pb-3"><SaldoAnthropic podeEditar={gestor} /></div>
+        <div className="flex items-center gap-2.5 border-t border-line px-1 pt-4">
           {avatar}
           <div className="min-w-0 flex-1 leading-tight" title={email}>
             <div className="truncate text-[14px] font-medium text-ink">{nome}</div>
@@ -215,15 +215,13 @@ function Studio({ email }: { email: string }) {
       <header className="lg:hidden flex items-center justify-between border-b border-line bg-surface px-4 py-2 pt-[max(.5rem,env(safe-area-inset-top))]">
         <Marca className="h-11 w-auto" />
         <div className="flex items-center">
-          {gestor && (
-            <Botao variante="fantasma" tamanho="icone" className="size-11" aria-label="Saldo Anthropic" aria-expanded={saldoAberto} onClick={() => setSaldoAberto(!saldoAberto)}><Wallet className="size-5" /></Botao>
-          )}
+          <SaldoAnthropic pilula onPilula={() => setSaldoAberto(!saldoAberto)} />
           {sino}
           <Botao variante="fantasma" tamanho="icone" className="size-11" aria-label="Sair" onClick={sair}><LogOut className="size-4" /></Botao>
         </div>
       </header>
 
-      {gestor && saldoAberto && <div className="lg:hidden border-b border-line bg-surface px-4 py-3"><SaldoAnthropic /></div>}
+      {saldoAberto && <div className="lg:hidden border-b border-line bg-surface px-4 py-3"><SaldoAnthropic podeEditar={gestor} /></div>}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="hidden lg:flex h-[72px] shrink-0 items-center gap-2 border-b border-line px-8">

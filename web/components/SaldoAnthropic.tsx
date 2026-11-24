@@ -23,7 +23,7 @@ const data = (s: string | null) => (s ? new Date(s).toLocaleString("pt-BR", { da
  * Saldo estimado na Anthropic. A API não expõe o saldo de créditos: o gestor informa o saldo
  * que vê no Console e o painel desconta o custo real das conversas feitas depois disso.
  */
-export default function SaldoAnthropic({ compacto = false }: { compacto?: boolean }) {
+export default function SaldoAnthropic({ compacto = false, podeEditar = false, pilula, onPilula }: { compacto?: boolean; podeEditar?: boolean; pilula?: boolean; onPilula?: () => void }) {
   const { linhas: conversas } = useTabela<Conversa>("conversas", { ordem: "atualizado_em", limite: 200 });
   const { linhas: registros } = useTabela<{ id: string }>("credito_anthropic", { ordem: "informado_em", limite: 5 });
   const gatilho = `${conversas.reduce((s, c) => s + (c.custo_centavos ?? 0), 0)}|${registros[0]?.id ?? ""}`;
@@ -32,9 +32,14 @@ export default function SaldoAnthropic({ compacto = false }: { compacto?: boolea
   const [valor, setValor] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [falhou, setFalhou] = useState(false);
 
   useEffect(() => {
-    supabase().rpc("saldo_anthropic").then(({ data }) => { if (data) setSaldo(data as Saldo); });
+    supabase().rpc("saldo_anthropic").then(({ data, error }) => {
+      if (error) { console.error("saldo_anthropic", error); setFalhou(true); return; }
+      setFalhou(false);
+      if (data) setSaldo(data as Saldo);
+    });
   }, [gatilho]);
 
   async function salvar(e: React.FormEvent) {
@@ -50,7 +55,26 @@ export default function SaldoAnthropic({ compacto = false }: { compacto?: boolea
     if (data) setSaldo(data as Saldo);
   }
 
-  if (!saldo) return null;
+  if (pilula) {
+    const v = saldo?.saldo_estimado_centavos;
+    const baixoP = v !== null && v !== undefined && v < 500;
+    return (
+      <button onClick={onPilula} aria-label="Saldo Anthropic estimado" title="Saldo Anthropic (estimado)"
+        className={cn("flex h-9 items-center gap-1.5 rounded-full border border-line px-3 text-[13px] font-medium tabular-nums cursor-pointer", baixoP ? "text-[#D8AB81]" : "text-ink-2")}>
+        <Wallet className="size-4" aria-hidden />
+        {saldo?.informado ? usd(v) : falhou ? "?" : "…"}
+      </button>
+    );
+  }
+
+  if (!saldo) {
+    return (
+      <div className="rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-[12px] text-muted">
+        <div className="flex items-center gap-2"><Wallet className="size-3.5" aria-hidden />Saldo Anthropic (estimado)</div>
+        <div className="mt-1">{falhou ? "Não deu para carregar o saldo." : "Carregando…"}</div>
+      </div>
+    );
+  }
   const baixo = saldo.saldo_estimado_centavos !== null && saldo.saldo_estimado_centavos < 500;
 
   if (editando) {
@@ -74,15 +98,17 @@ export default function SaldoAnthropic({ compacto = false }: { compacto?: boolea
       <div className="flex items-center gap-2 text-[12px] text-muted">
         <Wallet className="size-3.5" aria-hidden />
         <span className="flex-1">Saldo Anthropic (estimado)</span>
-        <button onClick={() => { setEditando(true); setValor(saldo.saldo_estimado_centavos !== null ? (saldo.saldo_estimado_centavos / 100).toFixed(2).replace(".", ",") : ""); }}
+        {podeEditar && <button onClick={() => { setEditando(true); setValor(saldo.saldo_estimado_centavos !== null ? (saldo.saldo_estimado_centavos / 100).toFixed(2).replace(".", ",") : ""); }}
           aria-label="Atualizar saldo" title="Atualizar saldo" className="grid size-6 place-items-center rounded-md hover:bg-surface hover:text-ink cursor-pointer">
           <Pencil className="size-3" />
-        </button>
+        </button>}
       </div>
       {saldo.informado ? (
         <div className={cn("mt-0.5 text-[20px] font-semibold tabular-nums", baixo ? "text-[#D8AB81]" : "text-ink")}>{usd(saldo.saldo_estimado_centavos)}</div>
-      ) : (
+      ) : podeEditar ? (
         <button onClick={() => setEditando(true)} className="mt-1 text-[13px] text-brand underline cursor-pointer">Informar saldo do Console</button>
+      ) : (
+        <div className="mt-1 text-[13px] text-muted">Ainda não informado.</div>
       )}
       <div className="mt-1 text-[12px] leading-snug text-muted tabular-nums">
         Gasto no mês: {usd(saldo.gasto_mes_centavos)}
