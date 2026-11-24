@@ -25,10 +25,12 @@ Padrões do Radar disponíveis: `select id, nome, perfil, razao_vs_mediana, form
 
 ## 2. Responder (mesmas ferramentas dos agentes, pela ponte)
 
+A ponte tem verify_jwt: mande a anon key (get_publishable_keys) no Authorization, além do x-cron-segredo.
+
 ```sql
 select net.http_post(
   url := 'https://uehzffxfxljiskfczhwk.supabase.co/functions/v1/ponte',
-  headers := jsonb_build_object('Content-Type','application/json','x-cron-segredo',(select valor #>> '{}' from config where chave='cron_segredo')),
+  headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer <anon key do projeto>','x-cron-segredo',(select valor #>> '{}' from config where chave='cron_segredo')),
   body := jsonb_build_object(
     'acao','fila_responder', 'conversa_id','<id>', 'concluir', true,
     'mensagem','Roteiro v1 pronto para aprovação.',
