@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { BarChart3, Bell, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare } from "lucide-react";
+import { BarChart3, Bell, CheckCheck, Bot, Layers, Library, LogOut, Mail, MessagesSquare, Wallet } from "lucide-react";
 import { supabase, variaveisFaltando } from "@/lib/supabase";
 import Chat from "@/components/Chat";
 import { Aprovacoes, Tarefas } from "@/components/Paineis";
 import { Biblioteca, Conteudos } from "@/components/Conteudos";
 import { Metricas } from "@/components/Metricas";
+import SaldoAnthropic from "@/components/SaldoAnthropic";
 import { useTabela } from "@/lib/useTabela";
 import type { Aprovacao } from "@/lib/tipos";
 import { Aviso, Botao, Cartao } from "@/components/ui";
@@ -163,6 +164,8 @@ function Studio({ email }: { email: string }) {
   useEffect(() => {
     supabase().from("membros").select("nome, papel").eq("email", email).maybeSingle().then(({ data }) => setMembro(data));
   }, [email]);
+  const gestor = membro?.papel === "gestor";
+  const [saldoAberto, setSaldoAberto] = useState(false);
   const nome = membro?.nome ?? email;
   const papel = membro ? `${PAPEIS[membro.papel] ?? membro.papel} · Rafa Studio` : "Rafa Studio";
   const avatar = <div aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-brand text-[14px] font-semibold text-brand-ink">{nome.slice(0, 1).toUpperCase()}</div>;
@@ -197,7 +200,8 @@ function Studio({ email }: { email: string }) {
             </button>
           ))}
         </nav>
-        <div className="mt-auto flex items-center gap-2.5 border-t border-line px-1 pt-4">
+        {gestor && <div className="mt-auto pb-3"><SaldoAnthropic /></div>}
+        <div className={cn("flex items-center gap-2.5 border-t border-line px-1 pt-4", !gestor && "mt-auto")}>
           {avatar}
           <div className="min-w-0 flex-1 leading-tight" title={email}>
             <div className="truncate text-[14px] font-medium text-ink">{nome}</div>
@@ -211,10 +215,15 @@ function Studio({ email }: { email: string }) {
       <header className="lg:hidden flex items-center justify-between border-b border-line bg-surface px-4 py-2 pt-[max(.5rem,env(safe-area-inset-top))]">
         <Marca className="h-11 w-auto" />
         <div className="flex items-center">
+          {gestor && (
+            <Botao variante="fantasma" tamanho="icone" className="size-11" aria-label="Saldo Anthropic" aria-expanded={saldoAberto} onClick={() => setSaldoAberto(!saldoAberto)}><Wallet className="size-5" /></Botao>
+          )}
           {sino}
           <Botao variante="fantasma" tamanho="icone" className="size-11" aria-label="Sair" onClick={sair}><LogOut className="size-4" /></Botao>
         </div>
       </header>
+
+      {gestor && saldoAberto && <div className="lg:hidden border-b border-line bg-surface px-4 py-3"><SaldoAnthropic /></div>}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="hidden lg:flex h-[72px] shrink-0 items-center gap-2 border-b border-line px-8">
