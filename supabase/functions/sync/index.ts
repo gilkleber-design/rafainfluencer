@@ -4,7 +4,7 @@
  */
 import { dbAdmin, segredoCron, json, segredoConfere } from "../_shared/db.ts";
 import { coletarTodas } from "../_shared/conteudos.ts";
-import { type Conversa, obterMotor, sincronizar } from "../_shared/processar.ts";
+import { type Conversa, modoMotor, obterMotor, sincronizar } from "../_shared/processar.ts";
 
 Deno.serve(async (req) => {
   const db = dbAdmin();
@@ -14,6 +14,8 @@ Deno.serve(async (req) => {
   // Coleta de métricas sob demanda (POST /sync?metricas=1). Não há rotina recorrente agendada.
   if (new URL(req.url).searchParams.get("metricas") === "1") return json({ ok: true, metricas: await coletarTodas(db) });
 
+  // Modo fila: não há sessões na API para acompanhar.
+  if (await modoMotor(db) === "fila") return json({ ok: true, modo: "fila" });
   const motor = await obterMotor(db);
 
   const { data: pendentes } = await db.from("chamadas").select("conversa_id").eq("estado", "pendente");

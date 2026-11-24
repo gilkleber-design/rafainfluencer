@@ -61,7 +61,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
   }
 
   const escolher = (id: string | null) => { setConversaId(id); setListaAberta(false); };
-  const estado = atual ? ESTADO_CONVERSA[atual.estado] ?? { nome: atual.estado, tom: "neutro" as const } : null;
+  const estado = atual?.na_fila_desde ? { nome: "Na fila", tom: "info" as const } : atual ? ESTADO_CONVERSA[atual.estado] ?? { nome: atual.estado, tom: "neutro" as const } : null;
   const pausada = atual?.estado === "pausada_orcamento";
 
   const lista = (
@@ -74,7 +74,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
         {carregandoLista && [0, 1, 2].map((i) => <Esqueleto key={i} className="mx-2 my-2 h-12" />)}
         {!carregandoLista && conversas.length === 0 && <p className="px-3 py-6 text-sm text-muted">Nenhuma conversa ainda. Comece uma ao lado.</p>}
         {conversas.map((c) => {
-          const e = ESTADO_CONVERSA[c.estado];
+          const e = c.na_fila_desde ? { nome: "Na fila", tom: "info" as const } : ESTADO_CONVERSA[c.estado];
           return (
             <button
               key={c.id}
@@ -86,7 +86,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
                 {c.estado === "trabalhando" && <span className="size-2 rounded-full bg-info animate-pulse" />}
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted">
-                <span>{quando(c.atualizado_em)}</span><span>·</span><span>{e?.nome ?? c.estado}</span><span>·</span><span>US$ {(c.custo_centavos / 100).toFixed(2)}</span>
+                <span>{quando(c.atualizado_em)}</span><span>·</span><span>{e?.nome ?? c.estado}</span>{c.custo_centavos > 0 && <><span>·</span><span>US$ {(c.custo_centavos / 100).toFixed(2)}</span></>}
               </div>
             </button>
           );
@@ -117,7 +117,7 @@ export default function Chat({ conversaId, setConversaId }: { conversaId: string
             <p className="text-[12px] text-muted">Command Center · delega para Produção</p>
           </div>
           {estado && <Selo tom={estado.tom} ponto>{estado.nome}</Selo>}
-          {atual && <span className="hidden sm:inline text-[12px] text-muted tabular-nums">US$ {(atual.custo_centavos / 100).toFixed(2)}</span>}
+          {atual && atual.custo_centavos > 0 && <span className="hidden sm:inline text-[12px] text-muted tabular-nums">US$ {(atual.custo_centavos / 100).toFixed(2)}</span>}
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto">

@@ -16,6 +16,11 @@ export interface Conversa {
   titulo: string;
 }
 
+/** Modo do motor: "api" (Managed Agents, pago) ou "fila" (pedidos atendidos pelo projeto do Claude, sem API). */
+export async function modoMotor(db: Db): Promise<"api" | "fila"> {
+  return (await lerConfig<string>(db, "motor_modo")) === "fila" ? "fila" : "api";
+}
+
 export async function obterMotor(db: Db): Promise<Motor> {
   const ids = await lerConfig<IdsMotor>(db, "motor_ids");
   if (!ids) throw new Error("Agentes ainda não configurados: rode a função setup.");
@@ -36,7 +41,7 @@ const NOMES_THREAD = new Map<string, string>();
 export const PADRAO_MINIMO = 2;
 
 // ---------------------------------------------------------------- ferramentas
-async function executarFerramenta(db: Db, conversaId: string, nome: string, e: Record<string, unknown>, autor: string): Promise<string> {
+export async function executarFerramenta(db: Db, conversaId: string, nome: string, e: Record<string, unknown>, autor: string): Promise<string> {
   switch (nome) {
     case "registrar_tarefa": {
       const { data, error } = await db.from("tarefas").insert({

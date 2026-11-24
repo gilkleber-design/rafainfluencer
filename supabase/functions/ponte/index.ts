@@ -3,12 +3,13 @@
  *  POST { acao: "mensagem", conversa_id?, texto, anexos? }  -> grava a mensagem e envia ao Command Center
  *  POST { acao: "decisao", aprovacao_id, estado: "aprovado"|"alteracao_pedida", comentario? }
  *  POST { acao: "conteudo_*" | "metricas_coletar", serie, ... }  -> ciclo de vida do conteúdo (ver _shared/conteudos.ts)
+ *  POST { acao: "fila_responder", conversa_id, ferramentas?, mensagem?, concluir? } (só servidor) -> resposta do projeto do Claude no modo fila
  * Responde na hora; o acompanhamento dos eventos continua em segundo plano (EdgeRuntime.waitUntil)
  * e o cron `sync` cobre o que sobrar.
  */
 import { cors, dbAdmin, json, lerConfig, membroDaRequisicao, segredoConfere, segredoCron } from "../_shared/db.ts";
 import { acaoConteudo } from "../_shared/conteudos.ts";
-import { acompanhar, gastoDoMes, type Limites, LIMITES_PADRAO, obterMotor } from "../_shared/processar.ts";
+import { acompanhar, executarFerramenta, gastoDoMes, type Limites, LIMITES_PADRAO, modoMotor, obterMotor } from "../_shared/processar.ts";
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
 
@@ -37,15 +38,38 @@ Deno.serve(async (req) => {
     return json(r.corpo, r.status);
   }
 
+  // Modo fila: o projeto do Claude responde usando as mesmas ferramentas dos agentes (sem API da Anthropic).
+  if (corpo.acao === "fila_responder") {
+    if (!viaServidor) return json({ erro: "acesso negado" }, 403);
+    const convId = String(corpo.conversa_id ?? "");
+    const { data: c } = await db.from("conversas").select("id").eq("id", convId).maybeSingle();
+    if (!c) return json({ erro: "conversa não encontrada" }, 404);
+    const resultados: unknown[] = [];
+    for (const f of (Array.isArray(corpo.ferramentas) ? corpo.ferramentas : []) as Record<string, unknown>[]) {
+      try {
+        const r = await executarFerramenta(db, convId, String(f.nome), (f.entrada ?? {}) as Record<string, unknown>, String(f.autor ?? "Command Center"));
+        resultados.push({ nome: f.nome, resposta: JSON.parse(r) });
+      } catch (err) {
+        resultados.push({ nome: f.nome, erro: (err as Error).message });
+      }
+    }
+    const mensagem = String(corpo.mensagem ?? "").trim();
+    if (mensagem) {
+      await db.from("mensagens").insert({ conversa_id: convId, autor: "command_center", autor_nome: "Command Center", texto: mensagem.slice(0, 20000), estado: "ok" });
+    }
+    if (corpo.concluir) await db.from("conversas").update({ na_fila_desde: null, estado: "aguardando" }).eq("id", convId);
+    return json({ ok: true, resultados });
+  }
+
+  const modo = await modoMotor(db);
   const limites = { ...LIMITES_PADRAO, ...(await lerConfig<Partial<Limites>>(db, "limites") ?? {}) };
   const gasto = await gastoDoMes(db);
-  if (gasto >= limites.mensal_centavos) {
+  if (modo === "api" && gasto >= limites.mensal_centavos) {
     return json({
       erro: `Orçamento do mês atingido (US$ ${(gasto / 100).toFixed(2)} de US$ ${(limites.mensal_centavos / 100).toFixed(2)}). Novas mensagens estão bloqueadas até o Gil aprovar um limite maior.`,
     }, 402);
   }
 
-  const motor = await obterMotor(db);
   let conversaId = corpo.conversa_id ? String(corpo.conversa_id) : null;
   let texto: string;
 
@@ -89,7 +113,21 @@ Deno.serve(async (req) => {
 
   const { data: conv } = await db.from("conversas").select("id, sessao_id, titulo, estado").eq("id", conversaId!).single();
   if (!conv) return json({ erro: "conversa não encontrada" }, 404);
+  if (modo === "fila") {
+    // Sem API: o pedido fica na fila até o projeto do Claude atender (ação fila_responder).
+    const { data: atual } = await db.from("conversas").select("na_fila_desde").eq("id", conv.id).single();
+    if (!atual?.na_fila_desde) {
+      await db.from("conversas").update({ na_fila_desde: new Date().toISOString(), estado: "ativa", ultimo_erro: null }).eq("id", conv.id);
+      await db.from("mensagens").insert({
+        conversa_id: conv.id, autor: "sistema", autor_nome: "Sistema", estado: "ok",
+        texto: "Recebido. O pedido entrou na fila do Command Center e a resposta aparece aqui quando ele for atendido.",
+      });
+    }
+    return json({ ok: true, conversa_id: conv.id, fila: true });
+  }
   if (conv.estado === "pausada_orcamento") return json({ erro: "conversa pausada pelo teto de gasto; abra uma nova" }, 402);
+
+  const motor = await obterMotor(db);
 
   try {
     let sessao = conv.sessao_id as string | null;
